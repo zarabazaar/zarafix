@@ -8,54 +8,49 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(145deg, #e0f7fa, #ffffff);
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
       padding: 20px;
     }
 
     h1 {
       text-align: center;
       color: #00796B;
-      margin-bottom: 20px;
     }
 
-    .container {
+    .btn {
+      display: inline-block;
+      background: linear-gradient(45deg, #26a69a, #80cbc4);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .form-container {
       max-width: 500px;
-      margin: auto;
+      margin: 20px auto;
       background: #fff;
-      padding: 20px;
+      padding: 25px;
       border-radius: 20px;
       box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      display: none;
     }
 
-    .top-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    button {
-      background: linear-gradient(45deg, #26a69a, #80cbc4);
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    }
-
-    input, textarea {
+    input, select, textarea {
       width: 100%;
       padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #ddd;
+      margin: 10px 0;
       border-radius: 12px;
+      border: 1px solid #ccc;
       font-size: 16px;
       background: #f9f9f9;
     }
@@ -65,10 +60,10 @@
       min-height: 100px;
     }
 
-    #successMessage {
+    #successMsg {
       display: none;
-      margin-top: 10px;
-      background: #c8e6c9;
+      margin-top: 15px;
+      background: #d4edda;
       padding: 10px;
       color: #256029;
       border-radius: 10px;
@@ -77,25 +72,36 @@
 </head>
 <body>
 
-  <h1>🛠 ZaraFix - Service Request Form</h1>
+  <h1>🛠 ZaraFix - Service Request</h1>
 
-  <div class="top-buttons">
-    <button onclick="location.href='dashboard.html'">📋 Dashboard</button>
-    <button onclick="document.getElementById('formSection').scrollIntoView()">➕ Post Request</button>
+  <div style="text-align:center;">
+    <button class="btn" onclick="document.querySelector('.form-container').style.display='block'">➕ Post Request</button>
   </div>
 
-  <div class="container" id="formSection">
+  <div class="form-container">
     <form id="serviceForm">
       <input type="text" id="name" placeholder="Your Name" required>
       <input type="text" id="city" placeholder="City" required>
       <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-      <input type="text" id="category" placeholder="Service Category (AC, Plumber, etc.)" required>
-      <textarea id="issue" placeholder="Describe the issue" required></textarea>
-      <input type="text" id="location" placeholder="Google Maps Location Link" required>
-      <button type="submit">🚀 Submit Request</button>
+
+      <select id="category" required>
+        <option value="">-- Select Service Category --</option>
+        <option>AC Repair</option>
+        <option>Plumber</option>
+        <option>Electrician</option>
+        <option>Washing Machine</option>
+        <option>Fridge</option>
+        <option>RO / Water Purifier</option>
+        <option>Other</option>
+      </select>
+
+      <textarea id="issue" placeholder="Describe the issue..." required></textarea>
+      <input type="text" id="location" placeholder="Google Maps Link (optional)">
+
+      <button type="submit" class="btn">🚀 Submit Request</button>
     </form>
 
-    <div id="successMessage">✅ Request submitted successfully!</div>
+    <div id="successMsg">✅ Request submitted successfully!</div>
   </div>
 
   <!-- Firebase SDKs -->
@@ -117,36 +123,29 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- Form Submit Logic -->
+  <!-- Form Script -->
   <script>
-    const form = document.getElementById('serviceForm');
-    const successMessage = document.getElementById('successMessage');
+    const form = document.getElementById("serviceForm");
+    const successMsg = document.getElementById("successMsg");
 
     form.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      const name = document.getElementById('name').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const whatsapp = document.getElementById('whatsapp').value.trim();
-      const category = document.getElementById('category').value.trim();
-      const issue = document.getElementById('issue').value.trim();
-      const location = document.getElementById('location').value.trim();
+      const data = {
+        name: document.getElementById("name").value,
+        city: document.getElementById("city").value,
+        whatsapp: document.getElementById("whatsapp").value,
+        category: document.getElementById("category").value,
+        issue: document.getElementById("issue").value,
+        location: document.getElementById("location").value,
+        timestamp: new Date().toLocaleString()
+      };
 
-      const now = new Date().toLocaleString();
-
-      firebase.database().ref("service_requests").push({
-        name,
-        city,
-        whatsapp,
-        category,
-        issue,
-        location,
-        timestamp: now
-      }).then(() => {
+      firebase.database().ref("service_requests").push(data).then(() => {
         form.reset();
-        successMessage.style.display = "block";
+        successMsg.style.display = "block";
       }).catch((err) => {
-        alert("❌ Failed to submit: " + err.message);
+        alert("❌ Error: " + err.message);
       });
     });
   </script>
