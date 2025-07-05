@@ -1,18 +1,149 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login to Zara Fix</title>
+  <title>ZaraFix - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 10px; }
+    .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    button { margin: 10px 5px; padding: 10px 20px; border: none; background: #4CAF50; color: white; font-size: 16px; border-radius: 10px; box-shadow: 0 4px #2d7c2d; transition: 0.2s; }
+    button:hover { transform: scale(1.05); }
+    .card { background: #fff; margin: 10px 0; padding: 10px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-  <h2>Poster Login</h2>
-  <button onclick="googleLogin()">Login with Google</button>
-  <script src="firebase.js"></script>
-  <script>
-    function googleLogin() {
-      // Firebase login logic here
-      alert('Google login triggered');
+
+<div class="container">
+  <h2>ZaraFix Service Request</h2>
+
+  <div id="authSection">
+    <button onclick="login()">🔐 Login with Google</button>
+  </div>
+
+  <div id="mainSection" class="hidden">
+    <button onclick="toggleForm()">📝 Fill Form</button>
+    <button onclick="toggleDashboard()">📋 Dashboard</button>
+
+    <form id="serviceForm" class="hidden">
+      <input type="text" id="name" placeholder="Your Name" required><br>
+      <input type="text" id="city" placeholder="City" required><br>
+      <select id="category">
+        <option value="">-- Select Category --</option>
+        <option value="AC Repair">AC Repair</option>
+        <option value="Electrician">Electrician</option>
+        <option value="Plumber">Plumber</option>
+        <!-- Add more categories as needed -->
+      </select><br>
+      <textarea id="issue" placeholder="Issue details" required></textarea><br>
+      <input type="text" id="whatsapp" placeholder="WhatsApp Number" required><br>
+      <button type="submit">Submit</button>
+    </form>
+
+    <div id="dashboard" class="hidden">
+      <h3>📋 Your Submitted Requests</h3>
+      <div id="requestList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  const authSection = document.getElementById('authSection');
+  const mainSection = document.getElementById('mainSection');
+  const dashboard = document.getElementById('dashboard');
+  const form = document.getElementById('serviceForm');
+  const requestList = document.getElementById('requestList');
+
+  let currentUserId = null;
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      currentUserId = user.uid;
+      authSection.classList.add("hidden");
+      mainSection.classList.remove("hidden");
+      loadRequests();
+    } else {
+      mainSection.classList.add("hidden");
+      authSection.classList.remove("hidden");
     }
-  </script>
+  });
+
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider);
+  }
+
+  function toggleForm() {
+    form.classList.toggle("hidden");
+    dashboard.classList.add("hidden");
+  }
+
+  function toggleDashboard() {
+    dashboard.classList.toggle("hidden");
+    form.classList.add("hidden");
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    if (!currentUserId) {
+      alert("🚫 Please login first!");
+      return;
+    }
+
+    const name = document.getElementById("name").value;
+    const city = document.getElementById("city").value;
+    const category = document.getElementById("category").value;
+    const issue = document.getElementById("issue").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+
+    firebase.database().ref("requests").push({
+      userId: currentUserId,
+      name, city, category, issue, whatsapp,
+      timestamp: new Date().toLocaleString()
+    }).then(() => {
+      alert("✅ Successfully submitted!");
+      form.reset();
+      loadRequests();
+    });
+  });
+
+  function loadRequests() {
+    requestList.innerHTML = "";
+    firebase.database().ref("requests").once("value", snapshot => {
+      snapshot.forEach(child => {
+        const data = child.val();
+        if (data.userId === currentUserId) {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <strong>${data.name}</strong> | ${data.city}<br>
+            Category: ${data.category}<br>
+            Issue: ${data.issue}<br>
+            WhatsApp: ${data.whatsapp}<br>
+            <small>${data.timestamp}</small>
+          `;
+          requestList.appendChild(card);
+        }
+      });
+    });
+  }
+</script>
 </body>
 </html>
