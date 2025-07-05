@@ -1,107 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Service Request Form</title>
+  <title>Service Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background: #ecf0f3;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
     }
 
     .form-container {
-      background: #f0f0f3;
-      box-shadow: 8px 8px 16px #ccc, -8px -8px 16px #fff;
-      padding: 30px;
-      border-radius: 20px;
-      width: 90%;
       max-width: 400px;
+      margin: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
 
-    .form-container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    input, textarea, select {
+    .form-container input,
+    .form-container textarea {
       width: 100%;
+      margin-bottom: 15px;
       padding: 12px;
-      margin: 10px 0;
-      border: none;
       border-radius: 12px;
-      background: #ecf0f3;
-      box-shadow: inset 3px 3px 6px #ccc, inset -3px -3px 6px #fff;
+      border: 1px solid #ccc;
       font-size: 16px;
+      outline: none;
+      transition: 0.3s ease;
     }
 
-    textarea {
-      resize: none;
-      height: 80px;
+    .form-container input:focus,
+    .form-container textarea:focus {
+      border-color: #007BFF;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
     }
 
-    .btn-3d {
+    .form-container button {
       width: 100%;
       padding: 14px;
-      margin-top: 15px;
-      background: linear-gradient(145deg, #2196f3, #1976d2);
+      background: linear-gradient(to right, #007BFF, #00C6FF);
       color: white;
-      font-weight: bold;
       font-size: 18px;
       border: none;
-      border-radius: 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       cursor: pointer;
-      box-shadow: 6px 6px 12px #bbb, -6px -6px 12px #fff;
-      transition: all 0.3s ease;
-      animation: float 3s ease-in-out infinite;
+      transition: transform 0.2s ease;
     }
 
-    .btn-3d:hover {
-      transform: scale(1.03) translateY(-2px);
+    .form-container button:hover {
+      transform: scale(1.03);
     }
 
-    .btn-3d:active {
-      transform: translateY(2px);
-      box-shadow: inset 3px 3px 6px #aaa, inset -3px -3px 6px #fff;
-      animation: none;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-4px); }
-      100% { transform: translateY(0px); }
+    .form-container button:active {
+      transform: scale(0.98);
     }
   </style>
 </head>
 <body>
 
   <div class="form-container">
-    <h2>🛠️ Service Request</h2>
-    <form id="serviceForm">
+    <h2 style="text-align:center">Post Your Service</h2>
+    <form id="postForm">
       <input type="text" id="name" placeholder="Your Name" required>
       <input type="text" id="city" placeholder="City" required>
-      <input type="text" id="address" placeholder="Address" required>
       <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-      <select id="category" required>
-        <option value="">Select Category</option>
-        <option>Electrician</option>
-        <option>Plumber</option>
-        <option>AC Repair</option>
-        <option>Washing Machine</option>
-        <option>Carpenter</option>
-        <option>Other</option>
-      </select>
-      <textarea id="issue" placeholder="Describe your issue..." required></textarea>
-      <button type="submit" class="btn-3d">📤 Submit Request</button>
+      <textarea id="issue" placeholder="Describe your issue" required></textarea>
+      <button type="submit">📤 Submit</button>
     </form>
   </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    // ✅ Firebase config here
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- Submit Script -->
+  <script>
+    document.getElementById("postForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const city = document.getElementById("city").value;
+      const whatsapp = document.getElementById("whatsapp").value;
+      const issue = document.getElementById("issue").value;
+
+      firebase.database().ref("serviceRequests").push({
+        name,
+        city,
+        whatsapp,
+        issue,
+        timestamp: Date.now()
+      }).then(() => {
+        alert("✅ Successfully submitted!");
+        document.getElementById("postForm").reset();
+      }).catch((error) => {
+        alert("❌ Error: " + error.message);
+      });
+    });
+  </script>
 
 </body>
 </html>
