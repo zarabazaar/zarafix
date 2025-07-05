@@ -1,9 +1,19 @@
-<form id="postForm">
-  <input type="text" id="title" placeholder="Service Needed" required>
-  <input type="text" id="city" placeholder="City" required>
-  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-  <textarea id="details" placeholder="Issue details" required></textarea>
-  <button type="submit">Post</button>
+<h2>🔧 Service Request Form</h2>
+<form id="serviceForm">
+  <input type="text" id="name" placeholder="Your Name" required><br>
+  <input type="text" id="address" placeholder="Full Address" required><br>
+  <input type="text" id="city" placeholder="City" required><br>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required><br>
+  <select id="category" required>
+    <option value="">Select Service Category</option>
+    <option value="Electrician">Electrician</option>
+    <option value="Plumber">Plumber</option>
+    <option value="AC Repair">AC Repair</option>
+    <option value="Carpenter">Carpenter</option>
+    <option value="Other">Other</option>
+  </select><br>
+  <textarea id="issue" placeholder="Describe your issue" required></textarea><br>
+  <button type="submit">📤 Submit Request</button>
 </form>
 
 <!-- Firebase SDKs -->
@@ -12,25 +22,45 @@
 <script src="firebase.js"></script>
 
 <script>
-  document.getElementById("postForm").addEventListener("submit", function(e){
+  document.getElementById("serviceForm").addEventListener("submit", function(e){
     e.preventDefault();
 
-    var title = document.getElementById("title").value;
-    var city = document.getElementById("city").value;
-    var whatsapp = document.getElementById("whatsapp").value;
-    var details = document.getElementById("details").value;
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    const city = document.getElementById("city").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+    const category = document.getElementById("category").value;
+    const issue = document.getElementById("issue").value;
 
-    firebase.database().ref("jobs").push({
-      title: title,
-      city: city,
-      whatsapp: whatsapp,
-      details: details,
-      timestamp: Date.now()
-    }).then(() => {
-      alert("✅ Post successful!");
-      document.getElementById("postForm").reset();
-    }).catch((error) => {
-      alert("❌ Error: " + error.message);
-    });
+    // Get Location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const lat = position.coords.latitude;
+        const long = position.coords.longitude;
+
+        // Push to Firebase
+        firebase.database().ref("service_requests").push({
+          name: name,
+          address: address,
+          city: city,
+          whatsapp: whatsapp,
+          category: category,
+          issue: issue,
+          latitude: lat,
+          longitude: long,
+          timestamp: Date.now()
+        }).then(() => {
+          alert("✅ Your request has been posted!");
+          document.getElementById("serviceForm").reset();
+        }).catch((error) => {
+          alert("❌ Error: " + error.message);
+        });
+
+      }, function() {
+        alert("❌ Location access denied.");
+      });
+    } else {
+      alert("❌ Geolocation not supported.");
+    }
   });
 </script>
