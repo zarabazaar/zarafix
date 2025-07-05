@@ -75,7 +75,7 @@
   <h1>🛠 ZaraFix - Service Request</h1>
 
   <div style="text-align:center;">
-    <button class="btn" onclick="document.querySelector('.form-container').style.display='block'">➕ Post Request</button>
+    <button class="btn" onclick="document.querySelector('.form-container').style.display='block'; getLocation()">➕ Post Request</button>
   </div>
 
   <div class="form-container">
@@ -96,7 +96,9 @@
       </select>
 
       <textarea id="issue" placeholder="Describe the issue..." required></textarea>
-      <input type="text" id="location" placeholder="Google Maps Link (optional)">
+      
+      <!-- Hidden input for map location -->
+      <input type="hidden" id="location">
 
       <button type="submit" class="btn">🚀 Submit Request</button>
     </form>
@@ -123,8 +125,25 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- Form Script -->
+  <!-- Location & Form Script -->
   <script>
+    // Get current location
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const mapLink = `https://maps.google.com/?q=${lat},${lon}`;
+          document.getElementById("location").value = mapLink;
+        }, function(error) {
+          alert("❌ Location access denied. Please allow location to proceed.");
+        });
+      } else {
+        alert("❌ Geolocation is not supported by this browser.");
+      }
+    }
+
+    // Handle form submit
     const form = document.getElementById("serviceForm");
     const successMsg = document.getElementById("successMsg");
 
@@ -144,6 +163,7 @@
       firebase.database().ref("service_requests").push(data).then(() => {
         form.reset();
         successMsg.style.display = "block";
+        setTimeout(() => successMsg.style.display = "none", 5000);
       }).catch((err) => {
         alert("❌ Error: " + err.message);
       });
