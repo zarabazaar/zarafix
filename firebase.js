@@ -3,7 +3,10 @@ const firebaseConfig = {
   authDomain: "zara-fix.firebaseapp.com",
   databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
   projectId: "zara-fix",
-  storageBucket: "zara-fix.appspot.com", // ✅ सही यह है
+  storageBucket: "zara-fix.appspot.com",
   messagingSenderId: "476473209200",
   appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
 };
+
+// ✅ यह लाइन जरूरी है
+firebase.initializeApp(firebaseConfig);
