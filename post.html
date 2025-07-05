@@ -1,52 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Post Your Problem</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="firebase.js"></script> <!-- यह फाइल आपने GitHub में upload की है -->
-  <style>
-    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
-    input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 10px; }
-    button { background-color: #28a745; color: white; border: none; }
-  </style>
-</head>
-<body>
+<form id="postForm">
+  <input type="text" id="title" placeholder="Service Needed" required>
+  <input type="text" id="city" placeholder="City" required>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+  <textarea id="details" placeholder="Issue details" required></textarea>
+  <button type="submit">Post</button>
+</form>
 
-  <h2>Post Your Problem</h2>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="firebase.js"></script>
 
-  <form id="jobForm">
-    <input type="text" id="title" placeholder="What is the issue?" required />
-    <input type="text" id="city" placeholder="City" required />
-    <input type="text" id="whatsapp" placeholder="WhatsApp Number" required />
-    <textarea id="details" placeholder="Explain your issue" required></textarea>
-    
-    <button type="submit">Post</button>
-  </form>
+<script>
+  document.getElementById("postForm").addEventListener("submit", function(e){
+    e.preventDefault();
 
-  <script>
-    document.getElementById("jobForm").addEventListener("submit", function(e) {
-      e.preventDefault();
+    var title = document.getElementById("title").value;
+    var city = document.getElementById("city").value;
+    var whatsapp = document.getElementById("whatsapp").value;
+    var details = document.getElementById("details").value;
 
-      const title = document.getElementById("title").value;
-      const city = document.getElementById("city").value;
-      const whatsapp = document.getElementById("whatsapp").value;
-      const details = document.getElementById("details").value;
-
-      firebase.database().ref("jobs").push({
-        title,
-        city,
-        whatsapp,
-        details,
-        timestamp: Date.now()
-      }).then(() => {
-        alert("✅ आपका काम पोस्ट हो गया!");
-        document.getElementById("jobForm").reset();
-      }).catch((error) => {
-        alert("❌ Error: " + error.message);
-      });
+    firebase.database().ref("jobs").push({
+      title: title,
+      city: city,
+      whatsapp: whatsapp,
+      details: details,
+      timestamp: Date.now()
+    }).then(() => {
+      alert("✅ Post successful!");
+      document.getElementById("postForm").reset();
+    }).catch((error) => {
+      alert("❌ Error: " + error.message);
     });
-  </script>
-
-</body>
-</html>
+  });
+</script>
