@@ -1,27 +1,155 @@
-document.getElementById("requestForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zara Fix</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f3f3f3;
+      padding: 20px;
+    }
+    .button-3d {
+      background: linear-gradient(145deg, #4caf50, #2e7d32);
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      margin: 10px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .button-3d:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      margin: 10px 0;
+    }
+    .form-section, .dashboard-section {
+      display: none;
+    }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea {
+      width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc;
+    }
+    .delete-btn {
+      background: crimson; color: white; border: none; padding: 8px 12px; margin-top: 10px; border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="button-3d" onclick="toggleForm(true)">➕ Post Service Request</button>
+  <button class="button-3d" onclick="toggleForm(false)">📋 My Dashboard</button>
 
-  const name = document.getElementById("name").value;
-  const city = document.getElementById("city").value;
-  const whatsapp = document.getElementById("whatsapp").value;
-  const category = document.getElementById("category").value;
-  const issue = document.getElementById("issue").value;
+  <div class="form-section" id="formSection">
+    <h2>Post Your Service Request</h2>
+    <form id="postForm">
+      <label>Name</label>
+      <input type="text" id="name" required>
+      <label>City</label>
+      <input type="text" id="city" required>
+      <label>WhatsApp</label>
+      <input type="text" id="whatsapp" required>
+      <label>Category</label>
+      <select id="category" required>
+        <option value="">Select category</option>
+        <option>AC Repair</option>
+        <option>Electrician</option>
+        <option>Plumber</option>
+        <option>Washing Machine</option>
+      </select>
+      <label>Issue Details</label>
+      <textarea id="issue" required></textarea>
+      <br>
+      <button class="button-3d" type="submit">Submit</button>
+    </form>
+  </div>
 
-  const userId = "user_" + Date.now(); // ✅ Unique ID
-  const timestamp = new Date().toLocaleString(); // ✅ Human readable time
+  <div class="dashboard-section" id="dashboard">
+    <h2>📋 Your Submitted Requests</h2>
+    <div id="requestList"></div>
+  </div>
 
-  firebase.database().ref("requests").push({
-    name,
-    city,
-    whatsapp,
-    category,
-    issue,
-    userId,
-    timestamp
-  }).then(() => {
-    alert("✅ Request submitted!");
-    document.getElementById("requestForm").reset();
-  }).catch(err => {
-    alert("❌ Error: " + err.message);
-  });
-});
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const form = document.getElementById("postForm");
+    const requestList = document.getElementById("requestList");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const data = {
+        name: form.name.value,
+        city: form.city.value,
+        whatsapp: form.whatsapp.value,
+        category: form.category.value,
+        issue: form.issue.value,
+        timestamp: new Date().toLocaleString(),
+        userId: "user_" + new Date().getTime()
+      };
+      db.ref("requests").push(data).then(() => {
+        alert("✅ Successfully Submitted!");
+        form.reset();
+        loadRequests();
+      });
+    });
+
+    function loadRequests() {
+      requestList.innerHTML = "Loading...";
+      db.ref("requests").once("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return requestList.innerHTML = "No requests found.";
+        requestList.innerHTML = "";
+        Object.entries(data).forEach(([key, val]) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <b>${val.name} | ${val.city}</b><br>
+            Category: ${val.category}<br>
+            Issue: ${val.issue}<br>
+            WhatsApp: ${val.whatsapp}<br>
+            ${val.timestamp}<br>
+            <button class='delete-btn' onclick="deleteRequest('${key}')">Delete</button>
+          `;
+          requestList.appendChild(card);
+        });
+      });
+    }
+
+    function deleteRequest(id) {
+      if (confirm("Are you sure you want to delete this request?")) {
+        db.ref("requests/" + id).remove().then(() => loadRequests());
+      }
+    }
+
+    function toggleForm(showForm) {
+      document.getElementById("formSection").style.display = showForm ? "block" : "none";
+      document.getElementById("dashboard").style.display = showForm ? "none" : "block";
+      if (!showForm) loadRequests();
+    }
+  </script>
+</body>
+</html>
