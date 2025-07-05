@@ -1,17 +1,52 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Post Your Repair Need</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post Your Problem</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase.js"></script> <!-- यह फाइल आपने GitHub में upload की है -->
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+    input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 10px; }
+    button { background-color: #28a745; color: white; border: none; }
+  </style>
 </head>
 <body>
+
   <h2>Post Your Problem</h2>
-  <form>
-    <input type="text" placeholder="What is the issue?" required><br>
-    <input type="text" placeholder="City" required><br>
-    <input type="file" accept="image/*"><br>
+
+  <form id="jobForm">
+    <input type="text" id="title" placeholder="What is the issue?" required />
+    <input type="text" id="city" placeholder="City" required />
+    <input type="text" id="whatsapp" placeholder="WhatsApp Number" required />
+    <textarea id="details" placeholder="Explain your issue" required></textarea>
+    
     <button type="submit">Post</button>
   </form>
+
+  <script>
+    document.getElementById("jobForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const city = document.getElementById("city").value;
+      const whatsapp = document.getElementById("whatsapp").value;
+      const details = document.getElementById("details").value;
+
+      firebase.database().ref("jobs").push({
+        title,
+        city,
+        whatsapp,
+        details,
+        timestamp: Date.now()
+      }).then(() => {
+        alert("✅ आपका काम पोस्ट हो गया!");
+        document.getElementById("jobForm").reset();
+      }).catch((error) => {
+        alert("❌ Error: " + error.message);
+      });
+    });
+  </script>
+
 </body>
 </html>
