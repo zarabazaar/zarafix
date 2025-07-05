@@ -29,26 +29,41 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
+    #logoutBtn {
+      background: #ff4d4d;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      transition: 0.2s;
+    }
+    #logoutBtn:hover {
+      background: #e60000;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <h1>Welcome to Zara Fix</h1>
+    <button id="logoutBtn" onclick="logout()">🔓 Logout</button>
     <p>🛠 Ads will appear here based on your category.</p>
 
     <div id="adsList">
-      <!-- Dynamic ads based on poster's category will appear here -->
+      <!-- Ads will be loaded here -->
     </div>
   </div>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // ✅ Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
       authDomain: "zara-fix.firebaseapp.com",
@@ -67,13 +82,19 @@
         currentUser = user;
         loadAds();
       } else {
-        window.location.href = "login.html"; // 🔐 Not logged in, go back
+        window.location.href = "login.html"; // redirect if not logged in
       }
     });
 
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+
     function loadAds() {
-      // 👇 Sample: Load all service requests for demo
       const adsList = document.getElementById("adsList");
+      adsList.innerHTML = "⏳ Loading...";
       firebase.database().ref("requests").once("value", snapshot => {
         adsList.innerHTML = "";
         snapshot.forEach(child => {
