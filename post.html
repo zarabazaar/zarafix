@@ -2,53 +2,106 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>3D Animated Button</title>
+  <title>Service Request Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f3;
-      height: 100vh;
+      margin: 0;
+      padding: 0;
+      background: #ecf0f3;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
+    }
+
+    .form-container {
+      background: #f0f0f3;
+      box-shadow: 8px 8px 16px #ccc, -8px -8px 16px #fff;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .form-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 12px;
+      background: #ecf0f3;
+      box-shadow: inset 3px 3px 6px #ccc, inset -3px -3px 6px #fff;
+      font-size: 16px;
+    }
+
+    textarea {
+      resize: none;
+      height: 80px;
     }
 
     .btn-3d {
-      background: linear-gradient(145deg, #1e88e5, #1565c0);
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+      background: linear-gradient(145deg, #2196f3, #1976d2);
       color: white;
       font-weight: bold;
       font-size: 18px;
-      padding: 14px 28px;
       border: none;
       border-radius: 14px;
       cursor: pointer;
-      box-shadow: 6px 6px 12px #ccc, -6px -6px 12px #fff;
+      box-shadow: 6px 6px 12px #bbb, -6px -6px 12px #fff;
       transition: all 0.3s ease;
       animation: float 3s ease-in-out infinite;
     }
 
     .btn-3d:hover {
-      transform: scale(1.05) translateY(-4px);
-      box-shadow: 8px 8px 18px #bbb, -8px -8px 18px #fff;
+      transform: scale(1.03) translateY(-2px);
     }
 
     .btn-3d:active {
       transform: translateY(2px);
-      box-shadow: inset 3px 3px 8px #aaa, inset -3px -3px 8px #fff;
+      box-shadow: inset 3px 3px 6px #aaa, inset -3px -3px 6px #fff;
       animation: none;
     }
 
     @keyframes float {
       0% { transform: translateY(0px); }
-      50% { transform: translateY(-3px); }
+      50% { transform: translateY(-4px); }
       100% { transform: translateY(0px); }
     }
   </style>
 </head>
 <body>
 
-  <button class="btn-3d">Post Service Request</button>
+  <div class="form-container">
+    <h2>🛠️ Service Request</h2>
+    <form id="serviceForm">
+      <input type="text" id="name" placeholder="Your Name" required>
+      <input type="text" id="city" placeholder="City" required>
+      <input type="text" id="address" placeholder="Address" required>
+      <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+      <select id="category" required>
+        <option value="">Select Category</option>
+        <option>Electrician</option>
+        <option>Plumber</option>
+        <option>AC Repair</option>
+        <option>Washing Machine</option>
+        <option>Carpenter</option>
+        <option>Other</option>
+      </select>
+      <textarea id="issue" placeholder="Describe your issue..." required></textarea>
+      <button type="submit" class="btn-3d">📤 Submit Request</button>
+    </form>
+  </div>
 
 </body>
 </html>
