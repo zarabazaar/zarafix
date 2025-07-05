@@ -1,56 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>ZaraFix - Service Request</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(145deg, #e0f7fa, #ffffff);
       padding: 20px;
-      text-align: center;
     }
 
     h1 {
-      font-size: 28px;
+      text-align: center;
+      color: #00796B;
       margin-bottom: 20px;
-      color: #333;
     }
 
     .container {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
       max-width: 500px;
       margin: auto;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 12px;
-      background: #f0f0f0;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 14px 20px;
-      margin: 10px 8px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(45deg, #00b09b, #96c93d);
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      background: #fff;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
     }
 
     .top-buttons {
@@ -60,41 +34,75 @@
       margin-bottom: 20px;
     }
 
+    button {
+      background: linear-gradient(45deg, #26a69a, #80cbc4);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #f9f9f9;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
     #successMessage {
-      background: #d4edda;
-      color: #155724;
-      padding: 10px;
-      border-radius: 10px;
-      margin-top: 15px;
       display: none;
+      margin-top: 10px;
+      background: #c8e6c9;
+      padding: 10px;
+      color: #256029;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>🔧 ZaraFix - Service Request</h1>
+  <h1>🛠 ZaraFix - Service Request Form</h1>
 
   <div class="top-buttons">
-    <button onclick="window.location.href='dashboard.html'">📋 Dashboard</button>
-    <button onclick="document.getElementById('requestForm').scrollIntoView()">➕ Post Service</button>
+    <button onclick="location.href='dashboard.html'">📋 Dashboard</button>
+    <button onclick="document.getElementById('formSection').scrollIntoView()">➕ Post Request</button>
   </div>
 
-  <div class="container" id="requestForm">
+  <div class="container" id="formSection">
     <form id="serviceForm">
       <input type="text" id="name" placeholder="Your Name" required>
       <input type="text" id="city" placeholder="City" required>
       <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-      <input type="text" id="category" placeholder="Service Category (AC, Plumber...)" required>
-      <textarea id="issue" placeholder="Describe your issue" required></textarea>
-      <input type="text" id="location" placeholder="Live Location Link (from Google Maps)" required>
+      <input type="text" id="category" placeholder="Service Category (AC, Plumber, etc.)" required>
+      <textarea id="issue" placeholder="Describe the issue" required></textarea>
+      <input type="text" id="location" placeholder="Google Maps Location Link" required>
       <button type="submit">🚀 Submit Request</button>
     </form>
-    <div id="successMessage">✅ Your request has been submitted successfully!</div>
+
+    <div id="successMessage">✅ Request submitted successfully!</div>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <!-- Firebase Config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -107,29 +115,38 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  </script>
 
-    document.getElementById("serviceForm").addEventListener("submit", function(e) {
+  <!-- Form Submit Logic -->
+  <script>
+    const form = document.getElementById('serviceForm');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      const name = document.getElementById("name").value.trim();
-      const city = document.getElementById("city").value.trim();
-      const whatsapp = document.getElementById("whatsapp").value.trim();
-      const category = document.getElementById("category").value.trim();
-      const issue = document.getElementById("issue").value.trim();
-      const location = document.getElementById("location").value.trim();
+      const name = document.getElementById('name').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const whatsapp = document.getElementById('whatsapp').value.trim();
+      const category = document.getElementById('category').value.trim();
+      const issue = document.getElementById('issue').value.trim();
+      const location = document.getElementById('location').value.trim();
 
-      const now = new Date();
-      const readableTime = now.toLocaleString();
+      const now = new Date().toLocaleString();
 
-      db.ref("service_requests").push({
-        name, city, whatsapp, category, issue, location,
-        timestamp: readableTime
+      firebase.database().ref("service_requests").push({
+        name,
+        city,
+        whatsapp,
+        category,
+        issue,
+        location,
+        timestamp: now
       }).then(() => {
-        document.getElementById("successMessage").style.display = "block";
-        document.getElementById("serviceForm").reset();
-      }).catch((error) => {
-        alert("❌ Error: " + error.message);
+        form.reset();
+        successMessage.style.display = "block";
+      }).catch((err) => {
+        alert("❌ Failed to submit: " + err.message);
       });
     });
   </script>
