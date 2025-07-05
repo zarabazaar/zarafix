@@ -1,34 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Login</title>
+  <title>Zara Fix - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background: #f0f0f0; padding: 20px; text-align: center; }
-    .box {
-      max-width: 350px; margin: auto; background: white;
-      padding: 20px; border-radius: 10px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-    input, button {
-      width: 90%; padding: 10px; margin: 8px 0;
-      border-radius: 6px; border: 1px solid #ccc;
-    }
+    body { font-family: Arial; text-align: center; padding: 40px; background: #f4f4f4; }
+    .card { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    input { padding: 10px; margin: 8px 0; width: 90%; border-radius: 8px; border: 1px solid #ccc; }
     button {
-      background: #4CAF50; color: white; border: none;
-      box-shadow: 0 5px #3e8e41;
+      padding: 10px 20px; margin-top: 10px; background: #4CAF50; color: white;
+      border: none; border-radius: 8px; cursor: pointer;
     }
-    button:hover { background: #45a049; }
+    button:hover { transform: scale(1.05); }
   </style>
 </head>
 <body>
 
-<div class="box">
+<div class="card">
   <h2>🔐 Login to ZaraFix</h2>
+
   <input type="email" id="email" placeholder="Email"><br>
   <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="emailLogin()">Login with Email</button>
-  <hr>
+  <button onclick="emailLogin()">Login with Email</button><br><br>
+
   <button onclick="googleLogin()">Login with Google</button>
 </div>
 
@@ -40,30 +34,28 @@
   const firebaseConfig = {
     apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
     authDomain: "zara-fix.firebaseapp.com",
-    projectId: "zara-fix",
     databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
   };
   firebase.initializeApp(firebaseConfig);
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      window.location.href = "welcome.html"; // ✅ Redirect after login
-    }
-  });
-
-  function emailLogin() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .catch(error => alert("❌ " + error.message));
-  }
 
   function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
-      .catch(error => alert("❌ " + error.message));
+      .then(() => window.location.href = "welcome.html")
+      .catch(error => alert(error.message));
+  }
+
+  function emailLogin() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+      .then(() => window.location.href = "welcome.html")
+      .catch(err => alert("❌ " + err.message));
   }
 </script>
-
 </body>
 </html>
