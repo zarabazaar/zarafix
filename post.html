@@ -1,113 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>🛠️ Service Request Form</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: #e0eafc;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
+document.getElementById("requestForm").addEventListener("submit", function(e) {
+  e.preventDefault();
 
-    .form-container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
+  const name = document.getElementById("name").value;
+  const city = document.getElementById("city").value;
+  const whatsapp = document.getElementById("whatsapp").value;
+  const category = document.getElementById("category").value;
+  const issue = document.getElementById("issue").value;
 
-    h2 {
-      text-align: center;
-      color: #333;
-    }
+  const userId = "user_" + Date.now(); // ✅ Unique ID
+  const timestamp = new Date().toLocaleString(); // ✅ Human readable time
 
-    input, select, textarea, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    button {
-      background: linear-gradient(to right, #4facfe, #00f2fe);
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: linear-gradient(to right, #00c6ff, #0072ff);
-    }
-  </style>
-</head>
-<body>
-  <div class="form-container">
-    <h2>🛠️ Request Service</h2>
-    <form id="requestForm">
-      <input type="text" id="name" placeholder="Your Name" required>
-      <input type="text" id="city" placeholder="City" required>
-      <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-      <select id="category" required>
-        <option value="">Choose Category</option>
-        <option>AC Repair</option>
-        <option>Fridge Repair</option>
-        <option>Washing Machine</option>
-        <option>Electrician</option>
-        <option>Plumber</option>
-      </select>
-      <textarea id="issue" placeholder="Describe the issue..." required></textarea>
-      <button type="submit">📤 Submit Request</button>
-    </form>
-  </div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-
-  <script>
-    document.getElementById("requestForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      const name = document.getElementById("name").value;
-      const city = document.getElementById("city").value;
-      const whatsapp = document.getElementById("whatsapp").value;
-      const category = document.getElementById("category").value;
-      const issue = document.getElementById("issue").value;
-
-      firebase.database().ref("requests").push({
-        name,
-        city,
-        whatsapp,
-        category,
-        issue,
-        timestamp: new Date().toISOString()
-      }).then(() => {
-        alert("✅ Request submitted!");
-        document.getElementById("requestForm").reset();
-      }).catch(err => {
-        alert("❌ Error: " + err.message);
-      });
-    });
-  </script>
-</body>
-</html>
+  firebase.database().ref("requests").push({
+    name,
+    city,
+    whatsapp,
+    category,
+    issue,
+    userId,
+    timestamp
+  }).then(() => {
+    alert("✅ Request submitted!");
+    document.getElementById("requestForm").reset();
+  }).catch(err => {
+    alert("❌ Error: " + err.message);
+  });
+});
