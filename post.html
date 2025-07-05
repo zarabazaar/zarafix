@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Service Request Form</title>
+  <title>Service Request + Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial;
-      background: linear-gradient(to right, #ece9e6, #ffffff);
-      padding: 20px;
+      background: #f4f4f4;
       text-align: center;
+      padding: 20px;
     }
     .btn-3d {
       background: #007bff;
@@ -19,46 +19,51 @@
       border-radius: 15px;
       box-shadow: 0 8px #0056b3;
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: 0.2s;
+      margin: 10px;
     }
     .btn-3d:active {
       box-shadow: 0 4px #004080;
       transform: translateY(4px);
     }
-    #formContainer {
+    #formContainer, #dashboardContainer {
       display: none;
-      margin-top: 20px;
+      max-width: 400px;
+      margin: 20px auto;
+      background: white;
       padding: 20px;
       border-radius: 20px;
-      background: white;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
     input, textarea, select {
       width: 100%;
-      padding: 10px;
       margin-top: 10px;
+      padding: 10px;
       border-radius: 10px;
       border: 1px solid #ccc;
       font-size: 16px;
     }
-    button[type="submit"] {
-      background: green;
-      box-shadow: 0 8px #075c07;
+    .card {
+      text-align: left;
+      background: #fff;
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    button[type="submit"]:active {
-      box-shadow: 0 4px #044404;
-      transform: translateY(4px);
+    .card strong {
+      color: #333;
     }
   </style>
 </head>
 <body>
 
-  <h2>📋 Service Request</h2>
-  <button class="btn-3d" onclick="showForm()">📬 Fill Request Form</button>
+  <h2>🛠 ZaraFix — Service Request Portal</h2>
 
+  <button class="btn-3d" onclick="showForm()">📬 Fill Request Form</button>
+  <button class="btn-3d" onclick="showDashboard()">📋 Show Dashboard</button>
+
+  <!-- FORM -->
   <div id="formContainer">
     <form id="serviceForm">
       <input type="text" id="name" placeholder="Your Name" required>
@@ -77,15 +82,20 @@
 
       <textarea id="issue" placeholder="Describe your issue" required></textarea>
 
-      <!-- Hidden fields for auto location -->
       <input type="hidden" id="latitude">
       <input type="hidden" id="longitude">
 
-      <button type="submit" class="btn-3d">✅ Submit Request</button>
+      <button type="submit" class="btn-3d">✅ Submit</button>
     </form>
   </div>
 
-  <!-- Firebase -->
+  <!-- DASHBOARD -->
+  <div id="dashboardContainer">
+    <h3>📌 All Service Requests</h3>
+    <div id="requestList"></div>
+  </div>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="firebase.js"></script>
@@ -93,23 +103,26 @@
   <script>
     function showForm() {
       document.getElementById("formContainer").style.display = "block";
+      document.getElementById("dashboardContainer").style.display = "none";
       getLocation();
+    }
+
+    function showDashboard() {
+      document.getElementById("formContainer").style.display = "none";
+      document.getElementById("dashboardContainer").style.display = "block";
+      loadRequests();
     }
 
     function getLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
+        navigator.geolocation.getCurrentPosition(function(position) {
           document.getElementById("latitude").value = position.coords.latitude;
           document.getElementById("longitude").value = position.coords.longitude;
-        }, function (error) {
-          alert("Location access denied. Please enable location.");
         });
-      } else {
-        alert("Geolocation not supported in your browser.");
       }
     }
 
-    document.getElementById("serviceForm").addEventListener("submit", function (e) {
+    document.getElementById("serviceForm").addEventListener("submit", function(e){
       e.preventDefault();
 
       const data = {
@@ -124,13 +137,34 @@
       };
 
       firebase.database().ref("requests").push(data).then(() => {
-        alert("✅ Successfully submitted!");
+        alert("✅ Request submitted!");
         document.getElementById("serviceForm").reset();
         document.getElementById("formContainer").style.display = "none";
-      }).catch(err => {
-        alert("❌ Error: " + err.message);
       });
     });
+
+    function loadRequests() {
+      const list = document.getElementById("requestList");
+      list.innerHTML = "";
+
+      firebase.database().ref("requests").once("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          const data = childSnapshot.val();
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <strong>👤 Name:</strong> ${data.name}<br>
+            <strong>📍 City:</strong> ${data.city}<br>
+            <strong>🔧 Category:</strong> ${data.category}<br>
+            <strong>📝 Issue:</strong> ${data.issue}<br>
+            <strong>📱 WhatsApp:</strong> <a href="https://wa.me/${data.whatsapp}" target="_blank">${data.whatsapp}</a><br>
+            <strong>📍 Map:</strong> <a href="https://maps.google.com/?q=${data.latitude},${data.longitude}" target="_blank">Live Location</a><br>
+            <strong>⏱ Time:</strong> ${data.timestamp}
+          `;
+          list.appendChild(card);
+        });
+      });
+    }
   </script>
 
 </body>
