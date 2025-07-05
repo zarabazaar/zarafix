@@ -1,20 +1,21 @@
-<h2>🔧 Service Request Form</h2>
-<form id="serviceForm">
-  <input type="text" id="name" placeholder="Your Name" required><br>
-  <input type="text" id="address" placeholder="Full Address" required><br>
-  <input type="text" id="city" placeholder="City" required><br>
-  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required><br>
+<form id="postForm">
+  <input type="text" id="name" placeholder="Your Name" required>
+  <input type="text" id="address" placeholder="Full Address" required>
+  <input type="text" id="city" placeholder="City" required>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
   <select id="category" required>
-    <option value="">Select Service Category</option>
+    <option value="">Select Category</option>
     <option value="Electrician">Electrician</option>
     <option value="Plumber">Plumber</option>
     <option value="AC Repair">AC Repair</option>
     <option value="Carpenter">Carpenter</option>
-    <option value="Other">Other</option>
-  </select><br>
-  <textarea id="issue" placeholder="Describe your issue" required></textarea><br>
-  <button type="submit">📤 Submit Request</button>
+    <!-- Add more categories as needed -->
+  </select>
+  <textarea id="issue" placeholder="Describe your issue" required></textarea>
+  <button type="submit">📤 Post Request</button>
 </form>
+
+<p id="status"></p>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -22,7 +23,7 @@
 <script src="firebase.js"></script>
 
 <script>
-  document.getElementById("serviceForm").addEventListener("submit", function(e){
+  document.getElementById("postForm").addEventListener("submit", function(e){
     e.preventDefault();
 
     const name = document.getElementById("name").value;
@@ -32,35 +33,23 @@
     const category = document.getElementById("category").value;
     const issue = document.getElementById("issue").value;
 
-    // Get Location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        const lat = position.coords.latitude;
-        const long = position.coords.longitude;
+    const timestamp = Date.now();
+    const readableTime = new Date(timestamp).toLocaleString();
 
-        // Push to Firebase
-        firebase.database().ref("service_requests").push({
-          name: name,
-          address: address,
-          city: city,
-          whatsapp: whatsapp,
-          category: category,
-          issue: issue,
-          latitude: lat,
-          longitude: long,
-          timestamp: Date.now()
-        }).then(() => {
-          alert("✅ Your request has been posted!");
-          document.getElementById("serviceForm").reset();
-        }).catch((error) => {
-          alert("❌ Error: " + error.message);
-        });
-
-      }, function() {
-        alert("❌ Location access denied.");
-      });
-    } else {
-      alert("❌ Geolocation not supported.");
-    }
+    firebase.database().ref("customerRequests").push({
+      name,
+      address,
+      city,
+      whatsapp,
+      category,
+      issue,
+      timestamp,
+      readableTime
+    }).then(() => {
+      document.getElementById("status").innerText = "✅ Request Posted Successfully!";
+      document.getElementById("postForm").reset();
+    }).catch((error) => {
+      document.getElementById("status").innerText = "❌ Error: " + error.message;
+    });
   });
 </script>
