@@ -1,134 +1,162 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Service Request</title>
+  <title>ZaraFix - Service Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background: #f0f0f0; padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 20px; }
+    body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
     button {
-      background: linear-gradient(45deg, #4CAF50, #45a049); color: white;
-      border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;
-      margin: 5px; font-size: 16px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      margin: 10px 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: 0.3s;
     }
     button:hover { transform: scale(1.05); }
     .card {
-      background: #fff; padding: 15px; border-radius: 10px;
-      margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
     input, textarea, select {
       width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc;
     }
     .hidden { display: none; }
-    .whatsapp-btn {
-      display: inline-block; background: #25D366; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; margin-top: 10px;
-    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2>ZaraFix - Service Request</h2>
-  <div>
-    <button onclick="showForm()">📝 Service Form</button>
-    <button onclick="showDashboard()">📋 User Dashboard</button>
+  <div class="container">
+    <h2>ZaraFix Service Request</h2>
+
+    <div id="authSection">
+      <button onclick="login()">🔐 Login with Google</button>
+    </div>
+
+    <div id="mainSection" class="hidden">
+      <button onclick="showForm()">📝 Post Request</button>
+      <button onclick="showDashboard()">📋 My Dashboard</button>
+
+      <form id="serviceForm" class="hidden">
+        <input type="text" id="name" placeholder="Your Name" required>
+        <input type="text" id="city" placeholder="City" required>
+        <select id="category" required>
+          <option value="">-- Select Category --</option>
+          <option value="AC Repair">AC Repair</option>
+          <option value="Electrician">Electrician</option>
+          <option value="Plumber">Plumber</option>
+        </select>
+        <textarea id="issue" placeholder="Describe your issue" required></textarea>
+        <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+        <button type="submit">✅ Submit</button>
+      </form>
+
+      <div id="dashboard" class="hidden">
+        <h3>📋 Your Submitted Requests</h3>
+        <div id="requestList"></div>
+      </div>
+    </div>
   </div>
 
-  <form id="serviceForm">
-    <input type="text" id="name" placeholder="Your Name" required>
-    <input type="text" id="city" placeholder="City" required>
-    <select id="category">
-      <option value="">-- Select Category --</option>
-      <option value="AC Repair">AC Repair</option>
-      <option value="Electrician">Electrician</option>
-      <option value="Plumber">Plumber</option>
-    </select>
-    <textarea id="issue" placeholder="Describe your issue" required></textarea>
-    <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
-    <button type="submit">✅ Submit Request</button>
-  </form>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  <div id="dashboard" class="hidden">
-    <h3>📋 Your Submitted Requests</h3>
-    <div id="requestList"></div>
-  </div>
-</div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-    authDomain: "zara-fix.firebaseapp.com",
-    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-    projectId: "zara-fix",
-    storageBucket: "zara-fix.appspot.com",
-    messagingSenderId: "476473209200",
-    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  let currentUserId = null;
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      currentUserId = user.uid;
-      loadRequests();
-    } else {
-      alert("Please login first");
-    }
-  });
-
-  function showForm() {
-    document.getElementById("serviceForm").classList.remove("hidden");
-    document.getElementById("dashboard").classList.add("hidden");
-  }
-
-  function showDashboard() {
-    document.getElementById("dashboard").classList.remove("hidden");
-    document.getElementById("serviceForm").classList.add("hidden");
-    loadRequests();
-  }
-
-  document.getElementById("serviceForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const name = document.getElementById("name").value;
-    const city = document.getElementById("city").value;
-    const category = document.getElementById("category").value;
-    const issue = document.getElementById("issue").value;
-    const whatsapp = document.getElementById("whatsapp").value;
-    const timestamp = new Date().toLocaleString();
-
-    firebase.database().ref("requests").push({
-      userId: currentUserId,
-      name, city, category, issue, whatsapp, timestamp, acceptedBy: []
-    }).then(() => {
-      alert("✅ Request submitted");
-      document.getElementById("serviceForm").reset();
-    });
-  });
-
-  function loadRequests() {
+    const authSection = document.getElementById("authSection");
+    const mainSection = document.getElementById("mainSection");
+    const form = document.getElementById("serviceForm");
+    const dashboard = document.getElementById("dashboard");
     const requestList = document.getElementById("requestList");
-    requestList.innerHTML = "⏳ Loading...";
-    firebase.database().ref("requests").orderByChild("userId").equalTo(currentUserId).once("value", snapshot => {
-      requestList.innerHTML = "";
-      snapshot.forEach(child => {
-        const data = child.val();
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <b>${data.name}</b> | ${data.city}<br>
-          Category: ${data.category}<br>
-          Issue: ${data.issue}<br>
-          WhatsApp: <a class="whatsapp-btn" href="https://wa.me/${data.whatsapp}" target="_blank">Chat</a><br>
-          <small>${data.timestamp}</small>
-        `;
-        requestList.appendChild(div);
+    let currentUserId = null;
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        currentUserId = user.uid;
+        authSection.classList.add("hidden");
+        mainSection.classList.remove("hidden");
+        loadRequests();
+      } else {
+        authSection.classList.remove("hidden");
+        mainSection.classList.add("hidden");
+      }
+    });
+
+    function login() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider);
+    }
+
+    function showForm() {
+      form.classList.remove("hidden");
+      dashboard.classList.add("hidden");
+    }
+
+    function showDashboard() {
+      form.classList.add("hidden");
+      dashboard.classList.remove("hidden");
+      loadRequests();
+    }
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const city = document.getElementById("city").value;
+      const category = document.getElementById("category").value;
+      const issue = document.getElementById("issue").value;
+      const whatsapp = document.getElementById("whatsapp").value;
+
+      firebase.database().ref("requests/" + currentUserId).push({
+        name, city, category, issue, whatsapp,
+        userId: currentUserId,
+        timestamp: new Date().toLocaleString()
+      }).then(() => {
+        alert("✅ Request submitted successfully!");
+        form.reset();
+        showDashboard();
       });
     });
-  }
-</script>
+
+    function loadRequests() {
+      requestList.innerHTML = "";
+      firebase.database().ref("requests/" + currentUserId).once("value", snapshot => {
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            const data = child.val();
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <b>${data.name}</b> (${data.city})<br>
+              Category: ${data.category}<br>
+              Issue: ${data.issue}<br>
+              WhatsApp: ${data.whatsapp}<br>
+              <small>${data.timestamp}</small>
+            `;
+            requestList.appendChild(card);
+          });
+        } else {
+          requestList.innerHTML = "<i>No requests found.</i>";
+        }
+      });
+    }
+  </script>
 </body>
 </html>
