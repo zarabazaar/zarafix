@@ -4,93 +4,180 @@
   <title>ZaraFix - Service Request</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; padding: 15px; background: #f9f9f9; }
-    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+    body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; }
+    .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
     input, textarea, select {
-      width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc;
+      width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px;
     }
     button {
-      background: linear-gradient(to right, #4CAF50, #2E7D32); color: white;
-      padding: 10px 15px; border: none; border-radius: 8px; margin-top: 10px;
-      box-shadow: 0 4px #1b5e20; cursor: pointer;
+      padding: 10px 20px; background: linear-gradient(45deg, #4CAF50, #2196F3); border: none; color: white;
+      border-radius: 8px; cursor: pointer; box-shadow: 0 5px rgba(0,0,0,0.2); transition: 0.2s;
     }
-    button:hover { transform: scale(1.03); }
+    button:hover { transform: scale(1.05); }
+    .card {
+      background: #fff; border-radius: 10px; padding: 10px; margin-top: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>Post Your Service Request</h2>
-  
-  <input type="text" id="name" placeholder="Your Name" required>
-  <input type="text" id="city" placeholder="City" required>
+  <h2>ZaraFix - Service Request</h2>
 
-  <select id="category" required>
-    <option value="">-- Select Category --</option>
-    <option value="AC Repair">AC Repair</option>
-    <option value="Electrician">Electrician</option>
-    <option value="Plumber">Plumber</option>
-    <!-- Add more as needed -->
-  </select>
+  <div id="authSection">
+    <button onclick="login()">🔐 Login with Google</button>
+  </div>
 
-  <textarea id="issue" placeholder="Describe your issue" required></textarea>
-  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+  <div id="mainSection" class="hidden">
+    <button onclick="toggleForm()">📝 Fill Form</button>
+    <button onclick="toggleDashboard()">📋 Dashboard</button>
 
-  <!-- ✅ Full Address with Auto Detect -->
-  <input type="text" id="address" placeholder="Full Address (Auto or Manual)" required>
-  <button onclick="detectAddress()">📍 Auto Detect Address</button>
+    <form id="serviceForm" class="hidden">
+      <input type="text" id="name" placeholder="Your Name" required>
+      <input type="text" id="city" placeholder="City" required>
+      <select id="category" required>
+        <option value="">-- Select Category --</option>
+        <option value="AC Repair">AC Repair</option>
+        <option value="Electrician">Electrician</option>
+        <option value="Plumber">Plumber</option>
+      </select>
+      <textarea id="issue" placeholder="Describe your issue" required></textarea>
+      <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+      <input type="text" id="address" placeholder="Full Address" required>
+      <button type="button" onclick="detectAddress()">📍 Auto Detect Address</button>
+      <button type="submit">✅ Submit Request</button>
+    </form>
 
-  <button onclick="submitForm()">✅ Submit Request</button>
+    <div id="dashboard" class="hidden">
+      <h3>📋 Your Submitted Requests</h3>
+      <div id="requestList"></div>
+    </div>
+  </div>
 </div>
 
-<!-- Google Maps API (Required for Geocoding) -->
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-function detectAddress() {
-  if (navigator.geolocation) {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  const authSection = document.getElementById('authSection');
+  const mainSection = document.getElementById('mainSection');
+  const form = document.getElementById('serviceForm');
+  const dashboard = document.getElementById('dashboard');
+  const requestList = document.getElementById('requestList');
+
+  let currentUserId = null;
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      currentUserId = user.uid;
+      authSection.classList.add("hidden");
+      mainSection.classList.remove("hidden");
+      loadRequests();
+    } else {
+      authSection.classList.remove("hidden");
+      mainSection.classList.add("hidden");
+    }
+  });
+
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider);
+  }
+
+  function toggleForm() {
+    form.classList.toggle("hidden");
+    dashboard.classList.add("hidden");
+  }
+
+  function toggleDashboard() {
+    dashboard.classList.toggle("hidden");
+    form.classList.add("hidden");
+    loadRequests();
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    if (!currentUserId) return alert("Please login first.");
+
+    const data = {
+      userId: currentUserId,
+      name: document.getElementById("name").value,
+      city: document.getElementById("city").value,
+      category: document.getElementById("category").value,
+      issue: document.getElementById("issue").value,
+      whatsapp: document.getElementById("whatsapp").value,
+      address: document.getElementById("address").value,
+      timestamp: new Date().toLocaleString()
+    };
+
+    firebase.database().ref("requests").push(data).then(() => {
+      alert("✅ Submitted successfully!");
+      form.reset();
+      toggleDashboard();
+    });
+  });
+
+  function loadRequests() {
+    requestList.innerHTML = "";
+    firebase.database().ref("requests").orderByChild("userId").equalTo(currentUserId).once("value", snapshot => {
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const d = child.val();
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <b>${d.name}</b> | ${d.city}<br>
+            Category: ${d.category}<br>
+            Issue: ${d.issue}<br>
+            WhatsApp: ${d.whatsapp}<br>
+            Address: ${d.address}<br>
+            <small>${d.timestamp}</small>
+          `;
+          requestList.appendChild(div);
+        });
+      } else {
+        requestList.innerHTML = "<i>No requests found.</i>";
+      }
+    });
+  }
+
+  function detectAddress() {
+    if (!navigator.geolocation) {
+      alert("❌ Location not supported by browser.");
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(position => {
       const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+      const lon = position.coords.longitude;
 
-      const geocoder = new google.maps.Geocoder();
-      const latlng = { lat, lng };
-
-      geocoder.geocode({ location: latlng }, (results, status) => {
-        if (status === "OK") {
-          if (results[0]) {
-            document.getElementById("address").value = results[0].formatted_address;
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.display_name) {
+            document.getElementById("address").value = data.display_name;
           } else {
-            alert("No address found");
+            alert("❌ Address not found.");
           }
-        } else {
-          alert("Geocoder failed: " + status);
-        }
-      });
-
-    }, () => alert("Location permission denied"));
-  } else {
-    alert("Geolocation not supported by this browser.");
+        }).catch(() => alert("❌ Failed to get address."));
+    }, error => {
+      alert("❌ Location error: " + error.message);
+    });
   }
-}
-
-function submitForm() {
-  const name = document.getElementById("name").value;
-  const city = document.getElementById("city").value;
-  const category = document.getElementById("category").value;
-  const issue = document.getElementById("issue").value;
-  const whatsapp = document.getElementById("whatsapp").value;
-  const address = document.getElementById("address").value;
-
-  if (!name || !city || !category || !issue || !whatsapp || !address) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  // Submit logic here (Firebase etc.)
-  alert("✅ Submitted!\nAddress: " + address);
-}
 </script>
-
 </body>
 </html>
