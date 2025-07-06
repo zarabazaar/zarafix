@@ -1,182 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix Service Form</title>
+  <title>ZaraFix - Service Request</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 0;
+    body { font-family: Arial, sans-serif; padding: 15px; background: #f9f9f9; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+    input, textarea, select {
+      width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc;
     }
-
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 1rem;
-    }
-
     button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #00bcd4, #2196f3);
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
+      background: linear-gradient(to right, #4CAF50, #2E7D32); color: white;
+      padding: 10px 15px; border: none; border-radius: 8px; margin-top: 10px;
+      box-shadow: 0 4px #1b5e20; cursor: pointer;
     }
-
-    button:hover {
-      transform: scale(1.05);
-    }
-
-    .card {
-      background: #fff;
-      margin: 1rem auto;
-      padding: 1rem;
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      max-width: 500px;
-      width: 90%;
-    }
-
-    #form-section, #dashboard-section {
-      display: none;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    @media (max-width: 600px) {
-      button {
-        width: 100%;
-      }
-    }
+    button:hover { transform: scale(1.03); }
   </style>
 </head>
 <body>
 
-<div class="nav-buttons">
-  <button onclick="showForm()">📩 Service Request</button>
-  <button onclick="showDashboard()">📋 My Dashboard</button>
+<div class="container">
+  <h2>Post Your Service Request</h2>
+  
+  <input type="text" id="name" placeholder="Your Name" required>
+  <input type="text" id="city" placeholder="City" required>
+
+  <select id="category" required>
+    <option value="">-- Select Category --</option>
+    <option value="AC Repair">AC Repair</option>
+    <option value="Electrician">Electrician</option>
+    <option value="Plumber">Plumber</option>
+    <!-- Add more as needed -->
+  </select>
+
+  <textarea id="issue" placeholder="Describe your issue" required></textarea>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number" required>
+
+  <!-- ✅ Full Address with Auto Detect -->
+  <input type="text" id="address" placeholder="Full Address (Auto or Manual)" required>
+  <button onclick="detectAddress()">📍 Auto Detect Address</button>
+
+  <button onclick="submitForm()">✅ Submit Request</button>
 </div>
 
-<!-- ✅ Service Request Form -->
-<div id="form-section" class="card">
-  <h3>Post Your Service Request</h3>
-  <form id="serviceForm">
-    <input type="text" id="name" placeholder="Your Name" required />
-    <input type="text" id="city" placeholder="City" required />
-    <select id="category" required>
-      <option value="">-- Select Category --</option>
-      <option>AC Repair</option>
-      <option>Fridge Repair</option>
-      <option>Electrician</option>
-      <option>Carpenter</option>
-      <option>Plumber</option>
-    </select>
-    <textarea id="issue" placeholder="Describe your issue" required></textarea>
-    <input type="text" id="whatsapp" placeholder="WhatsApp Number" required />
-    <button type="submit">✅ Submit Request</button>
-  </form>
-</div>
-
-<!-- ✅ Dashboard Section -->
-<div id="dashboard-section" class="card">
-  <h3>📋 Your Submitted Requests</h3>
-  <div id="requestList">Loading...</div>
-</div>
-
-<!-- ✅ Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="firebase.js"></script>
+<!-- Google Maps API (Required for Geocoding) -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
 
 <script>
-  const formSection = document.getElementById("form-section");
-  const dashboardSection = document.getElementById("dashboard-section");
-  const requestList = document.getElementById("requestList");
+function detectAddress() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
-  const userId = localStorage.getItem("userId") || "user_" + Date.now();
-  localStorage.setItem("userId", userId);
+      const geocoder = new google.maps.Geocoder();
+      const latlng = { lat, lng };
 
-  function showForm() {
-    formSection.style.display = "block";
-    dashboardSection.style.display = "none";
-  }
-
-  function showDashboard() {
-    formSection.style.display = "none";
-    dashboardSection.style.display = "block";
-    loadUserRequests();
-  }
-
-  // ✅ Submit Form
-  document.getElementById("serviceForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const name = document.getElementById("name").value;
-    const city = document.getElementById("city").value;
-    const category = document.getElementById("category").value;
-    const issue = document.getElementById("issue").value;
-    const whatsapp = document.getElementById("whatsapp").value;
-
-    firebase.database().ref("requests").push({
-      name, city, category, issue, whatsapp,
-      timestamp: new Date().toLocaleString(),
-      userId
-    }).then(() => {
-      alert("✅ Request submitted!");
-      document.getElementById("serviceForm").reset();
-    }).catch((err) => alert("❌ Error: " + err.message));
-  });
-
-  // ✅ Load only this user's requests
-  function loadUserRequests() {
-    firebase.database().ref("requests").once("value", (snapshot) => {
-      requestList.innerHTML = "";
-      const data = snapshot.val();
-      if (!data) return requestList.innerHTML = "No requests found.";
-
-      const userData = Object.entries(data).filter(([key, val]) => val.userId === userId);
-      if (userData.length === 0) return requestList.innerHTML = "No requests found.";
-
-      userData.forEach(([id, val]) => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <strong>${val.name}</strong> | ${val.city}<br>
-          Category: ${val.category}<br>
-          Issue: ${val.issue}<br>
-          WhatsApp: ${val.whatsapp}<br>
-          <small>${val.timestamp}</small><br><br>
-          <button onclick="deleteRequest('${id}')">🗑 Delete</button>
-        `;
-        requestList.appendChild(div);
+      geocoder.geocode({ location: latlng }, (results, status) => {
+        if (status === "OK") {
+          if (results[0]) {
+            document.getElementById("address").value = results[0].formatted_address;
+          } else {
+            alert("No address found");
+          }
+        } else {
+          alert("Geocoder failed: " + status);
+        }
       });
-    });
+
+    }, () => alert("Location permission denied"));
+  } else {
+    alert("Geolocation not supported by this browser.");
+  }
+}
+
+function submitForm() {
+  const name = document.getElementById("name").value;
+  const city = document.getElementById("city").value;
+  const category = document.getElementById("category").value;
+  const issue = document.getElementById("issue").value;
+  const whatsapp = document.getElementById("whatsapp").value;
+  const address = document.getElementById("address").value;
+
+  if (!name || !city || !category || !issue || !whatsapp || !address) {
+    alert("Please fill all fields");
+    return;
   }
 
-  // ✅ Delete
-  function deleteRequest(id) {
-    if (confirm("Are you sure to delete this request?")) {
-      firebase.database().ref("requests/" + id).remove().then(() => {
-        alert("✅ Deleted");
-        loadUserRequests();
-      });
-    }
-  }
-
-  // Auto show form on load
-  showForm();
+  // Submit logic here (Firebase etc.)
+  alert("✅ Submitted!\nAddress: " + address);
+}
 </script>
 
 </body>
