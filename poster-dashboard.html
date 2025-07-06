@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Poster Dashboard - ZaraFix</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 10px; }
+    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    input, select, textarea {
+      width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 10px;
+      border: 1px solid #ccc; border-radius: 8px;
+    }
+    button {
+      padding: 10px 20px; background: linear-gradient(to right, #2196F3, #21CBF3);
+      color: white; border: none; border-radius: 12px;
+      box-shadow: 0 5px #0b7dda; font-size: 16px;
+      margin: 5px; transition: 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    .card {
+      background: #fefefe; padding: 15px; margin: 10px 0;
+      border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+    .card:hover { transform: scale(1.01); }
+    .hidden { display: none; }
+    .wallet { font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>ZaraFix - Poster Dashboard</h2>
+
+  <div id="authSection">
+    <button onclick="login()">🔐 Login with Google</button>
+  </div>
+
+  <div id="registerForm" class="hidden">
+    <h3>Poster Registration</h3>
+    <input type="text" id="posterName" placeholder="Your Name">
+    <input type="text" id="shopName" placeholder="Shop Name">
+    <input type="text" id="address" placeholder="Address">
+    <input type="text" id="category" placeholder="Category">
+    <input type="text" id="whatsapp" placeholder="WhatsApp Number">
+    <button onclick="submitPoster()">📩 Submit</button>
+    <p id="regMsg" style="color:red;"></p>
+  </div>
+
+  <div id="posterDashboard" class="hidden">
+    <p>Wallet: ₹<span class="wallet" id="walletAmt">0</span></p>
+    <div id="jobList"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  let currentUser = null;
+  let posterRef = null;
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      document.getElementById("authSection").classList.add("hidden");
+      checkRegistration();
+    }
+  });
+
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider);
+  }
+
+  function checkRegistration() {
+    posterRef = firebase.database().ref("posters/" + currentUser.uid);
+    posterRef.once("value", snap => {
+      if (snap.exists()) {
+        const wallet = snap.val().wallet || 0;
+        if (wallet >= 100) {
+          document.getElementById("walletAmt").textContent = wallet;
+          document.getElementById("posterDashboard").classList.remove("hidden");
+          deductDailyCharge(); // daily ₹3
+          loadJobs();
+        } else {
+          document.getElementById("registerForm").classList.remove("hidden");
+          document.getElementById("regMsg").textContent = "❌ Please recharge your wallet to ₹100 or more.";
+        }
+      } else {
+        document.getElementById("registerForm").classList.remove("hidden");
+      }
+    });
+  }
+
+  function submitPoster() {
+    const name = document.getElementById("posterName").value;
+    const shop = document.getElementById("shopName").value;
+    const address = document.getElementById("address").value;
+    const category = document.getElementById("category").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+
+    const data = {
+      name, shop, address, category, whatsapp,
+      wallet: 100,
+      userId: currentUser.uid
+    };
+
+    firebase.database().ref("posters/" + currentUser.uid).set(data).then(() => {
+      alert("✅ Registered successfully");
+      location.reload();
+    });
+  }
+
+  function deductDailyCharge() {
+    const today = new Date().toISOString().split("T")[0];
+    const deductionRef = firebase.database().ref("dailyDeduction/" + currentUser.uid + "/" + today);
+    const walletRef = firebase.database().ref("posters/" + currentUser.uid + "/wallet");
+
+    deductionRef.once("value", snap => {
+      if (!snap.exists()) {
+        walletRef.once("value", wSnap => {
+          const wallet = wSnap.val() || 0;
+          if (wallet >= 3) {
+            walletRef.set(wallet - 3);
+            deductionRef.set(true);
+          }
+        });
+      }
+    });
+  }
+
+  function loadJobs() {
+    const jobList = document.getElementById("jobList");
+    jobList.innerHTML = "Loading jobs...";
+
+    firebase.database().ref("requests").once("value", snapshot => {
+      jobList.innerHTML = "";
+      snapshot.forEach(child => {
+        const req = child.val();
+        const key = child.key;
+
+        posterRef.once("value", snap => {
+          const poster = snap.val();
+          if (poster.category === req.category) {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            let acceptedBy = req.acceptedBy || {};
+            let alreadyAccepted = acceptedBy[currentUser.uid];
+
+            card.innerHTML = `
+              <b>${req.name}</b> | ${req.city}<br>
+              🏠 ${req.address}, ${req.pincode}<br>
+              📦 ${req.category}<br>
+              💬 ${req.issue}<br>
+              <small>${req.timestamp}</small><br><br>
+              ${alreadyAccepted ? `
+                ✅ <b>Accepted</b><br>
+                📞 <a href="https://wa.me/${req.whatsapp}" target="_blank">WhatsApp</a><br>
+                <iframe src="https://maps.google.com/maps?q=${req.city}" width="100%" height="150"></iframe>
+              ` : `
+                <button onclick="acceptJob('${key}', '${poster.name}', '${poster.whatsapp}', '${poster.address}')">✅ Accept</button>
+              `}
+              <button onclick="deleteJob('${key}')">🗑 Delete</button>
+            `;
+            jobList.appendChild(card);
+          }
+        });
+      });
+    });
+  }
+
+  function acceptJob(requestId, name, whatsapp, address) {
+    const acceptData = {
+      name,
+      whatsapp,
+      mapLink: `https://maps.google.com/maps?q=${address}`
+    };
+
+    const acceptedRef = firebase.database().ref("requests/" + requestId + "/acceptedBy/" + currentUser.uid);
+    const walletRef = firebase.database().ref("posters/" + currentUser.uid + "/wallet");
+
+    walletRef.once("value", snap => {
+      const wallet = snap.val() || 0;
+      if (wallet >= 20) {
+        acceptedRef.set(acceptData).then(() => {
+          walletRef.set(wallet - 20).then(() => {
+            alert("✅ Job accepted & ₹20 deducted");
+            loadJobs();
+          });
+        });
+      } else {
+        alert("❌ Insufficient balance. Please recharge.");
+      }
+    });
+  }
+
+  function deleteJob(key) {
+    if (confirm("Are you sure you want to delete this job?")) {
+      firebase.database().ref("requests").child(key).remove().then(loadJobs);
+    }
+  }
+</script>
+</body>
+</html>
