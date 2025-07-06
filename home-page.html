@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZaraFix - Main Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 30px;
+      text-align: center;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 15px 25px;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    #loginBtn {
+      background: linear-gradient(to right, #2196F3, #21CBF3);
+    }
+    #message {
+      margin-top: 20px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<h2>ZaraFix Dashboard</h2>
+
+<button class="btn" onclick="checkLoginAndGo('service-request.html')">📋 Service Request</button>
+<button class="btn" onclick="checkLoginAndGo('poster-dashboard.html')">🧰 Poster Dashboard</button>
+<button class="btn" onclick="checkLoginAndGo('wallet-recharge.html')">💳 Wallet Recharge</button>
+<button class="btn" onclick="checkLoginAndGo('admin.html')">📊 Admin Panel</button>
+<br><br>
+<button class="btn" id="loginBtn" onclick="login()">🔐 Login with Google</button>
+<button class="btn" onclick="logout()">🚪 Logout</button>
+
+<p id="message"></p>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  let currentUser = null;
+
+  firebase.auth().onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      document.getElementById("message").textContent = "✅ Logged in as: " + user.email;
+    }
+  });
+
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider);
+  }
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      location.reload();
+    });
+  }
+
+  function checkLoginAndGo(url) {
+    if (currentUser) {
+      window.location.href = url;
+    } else {
+      document.getElementById("message").textContent = "❌ Please login first.";
+    }
+  }
+</script>
+
+</body>
+</html>
