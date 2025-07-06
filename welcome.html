@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Main Dashboard</title>
+  <title>ZaraFix - Home Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -13,49 +13,44 @@
     }
     h2 {
       color: #333;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     .btn {
       display: inline-block;
-      margin: 10px;
-      padding: 15px 25px;
+      margin: 15px;
+      padding: 18px 30px;
       background: linear-gradient(to right, #4CAF50, #2E7D32);
       color: white;
       font-size: 18px;
       border: none;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
       cursor: pointer;
-      transition: 0.3s;
+      transition: transform 0.3s;
       text-decoration: none;
     }
     .btn:hover {
-      transform: scale(1.05);
-    }
-    #loginBtn {
-      background: linear-gradient(to right, #2196F3, #21CBF3);
+      transform: scale(1.08);
     }
     #message {
-      margin-top: 20px;
+      margin-top: 25px;
       color: red;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-<h2>ZaraFix Dashboard</h2>
+<h2>⚙️ ZaraFix - Main Dashboard</h2>
 
-<button class="btn" onclick="checkLoginAndGo('service-request.html')">📋 Service Request</button>
-<button class="btn" onclick="checkLoginAndGo('poster-dashboard.html')">🧰 Poster Dashboard</button>
-<button class="btn" onclick="checkLoginAndGo('wallet-recharge.html')">💳 Wallet Recharge</button>
-<button class="btn" onclick="checkLoginAndGo('admin.html')">📊 Admin Panel</button>
-<br><br>
-<button class="btn" id="loginBtn" onclick="login()">🔐 Login with Google</button>
-<button class="btn" onclick="logout()">🚪 Logout</button>
+<a href="#" class="btn" onclick="checkLoginAndGo('service-request.html')">📋 Service Request</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('poster-dashboard.html')">🧰 Poster Dashboard</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('wallet-recharge.html')">💳 Wallet Recharge</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('admin.html')">📊 Admin Panel</a>
 
 <p id="message"></p>
 
-<!-- Firebase Scripts -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
@@ -75,27 +70,18 @@
 
   firebase.auth().onAuthStateChanged(user => {
     currentUser = user;
-    if (user) {
-      document.getElementById("message").textContent = "✅ Logged in as: " + user.email;
+    if (!user) {
+      // redirect to login if not logged in
+      window.location.href = "index.html";
     }
   });
 
-  function login() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider);
-  }
-
-  function logout() {
-    firebase.auth().signOut().then(() => {
-      location.reload();
-    });
-  }
-
-  function checkLoginAndGo(url) {
+  function checkLoginAndGo(page) {
     if (currentUser) {
-      window.location.href = url;
+      window.location.href = page;
     } else {
-      document.getElementById("message").textContent = "❌ Please login first.";
+      document.getElementById("message").innerText = "❌ Please login first.";
+      setTimeout(() => window.location.href = "index.html", 1000);
     }
   }
 </script>
