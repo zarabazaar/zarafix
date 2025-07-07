@@ -12,6 +12,19 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
+    .btn {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .approved-label {
+      color: green;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -39,21 +52,37 @@
       if (!user) window.location.href = "login.html";
     });
 
+    const postersDiv = document.getElementById("posters");
+
     firebase.database().ref("posters").once("value", snapshot => {
-      const postersDiv = document.getElementById("posters");
       snapshot.forEach(child => {
         const p = child.val();
-        postersDiv.innerHTML += `
-          <div class="card">
-            <b>${p.name}</b> (${p.category})<br>
-            Shop: ${p.shop}<br>
-            📍 ${p.address}<br>
-            📱 ${p.whatsapp}<br>
-            💰 Wallet: ₹${p.wallet || 0}
+        const uid = child.key;
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <b>${p.name}</b> (${p.category})<br>
+          Shop: ${p.shop}<br>
+          📍 ${p.address}<br>
+          📱 ${p.whatsapp}<br>
+          ✉️ ${p.email || ''}<br>
+          💰 Wallet: ₹${p.wallet || 0}<br>
+          <div id="approve-${uid}">
+            ${p.approved ? '<span class="approved-label">✅ Approved</span>' :
+              `<button class="btn" onclick="approvePoster('${uid}')">Approve</button>`}
           </div>
         `;
+        postersDiv.appendChild(card);
       });
     });
+
+    function approvePoster(uid) {
+      firebase.database().ref("posters/" + uid + "/approved").set(true).then(() => {
+        document.getElementById("approve-" + uid).innerHTML = '<span class="approved-label">✅ Approved</span>';
+        alert("Poster approved successfully.");
+      });
+    }
   </script>
 </body>
 </html>
