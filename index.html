@@ -1,27 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Login</title>
+  <title>ZaraFix - Login + Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { text-align: center; font-family: Arial; background: #f1f1f1; padding: 60px; }
-    button {
-      padding: 15px 25px;
+    body { font-family: Arial, sans-serif; background: #e3f2fd; padding: 40px; text-align: center; }
+    .hidden { display: none; }
+
+    .btn {
+      display: inline-block;
+      margin: 20px;
+      padding: 18px 30px;
       font-size: 18px;
-      background: #db4437;
-      color: white;
+      font-weight: bold;
+      color: #fff;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
       cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s;
     }
-    button:hover { background: #c23321; }
-    #msg { margin-top: 15px; color: red; }
+    .btn:hover { transform: scale(1.05); }
+
+    .google { background: #db4437; }
+    .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
+    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
+    .purple { background: linear-gradient(to right, #9C27B0, #6A1B9A); }
+    .logout { background: #444; }
+
+    #userInfo { margin-top: 20px; font-size: 16px; color: #333; }
   </style>
 </head>
 <body>
-  <h2>🔐 Login to ZaraFix</h2>
-  <button onclick="googleLogin()">Login with Google</button>
-  <p id="msg"></p>
+
+  <!-- 🔐 Login Section -->
+  <div id="loginSection">
+    <h2>🔐 Login to ZaraFix</h2>
+    <button class="btn google" onclick="googleLogin()">Login with Google</button>
+    <p id="msg" style="color: red;"></p>
+  </div>
+
+  <!-- 👋 Welcome Section -->
+  <div id="welcomeSection" class="hidden">
+    <h2>👋 Welcome to <b>ZaraFix</b></h2>
+    <div id="userInfo">Checking login...</div>
+
+    <a class="btn green" href="service-request.html">📋 Service Request</a>
+    <a class="btn blue" href="poster-dashboard.html">🧰 Poster Dashboard</a>
+    <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+
+    <br><br>
+    <button class="btn logout" onclick="logout()">🚪 Logout</button>
+  </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -39,20 +70,34 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // redirect if already logged in
+    // Show sections based on login status
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        window.location.href = "welcome.html";
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("welcomeSection").style.display = "block";
+        document.getElementById("userInfo").innerHTML = `
+          👤 <b>${user.displayName || 'User'}</b><br>
+          📧 ${user.email}
+        `;
+      } else {
+        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("welcomeSection").style.display = "none";
       }
     });
 
     function googleLogin() {
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithPopup(provider)
-        .then(() => window.location.href = "welcome.html")
+        .then(() => {
+          // login successful, UI auto-updates via onAuthStateChanged
+        })
         .catch(error => {
           document.getElementById("msg").innerText = error.message;
         });
+    }
+
+    function logout() {
+      firebase.auth().signOut();
     }
   </script>
 </body>
