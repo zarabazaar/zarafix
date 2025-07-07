@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #eef2f3;
       margin: 0;
       padding: 20px;
     }
@@ -14,37 +14,54 @@
       text-align: center;
       color: #333;
     }
-    .section-title {
-      margin-top: 30px;
-      font-size: 20px;
+    .btn3d {
+      display: block;
+      width: 90%;
+      max-width: 400px;
+      margin: 15px auto;
+      padding: 15px;
+      font-size: 18px;
       font-weight: bold;
-      color: #222;
+      color: white;
+      background: linear-gradient(to right, #1976D2, #2196F3);
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn3d:hover {
+      transform: scale(1.05);
+    }
+
+    .section {
+      max-width: 700px;
+      margin: auto;
+      display: none;
     }
     .card {
-      background: #fff;
+      background: white;
       margin: 10px;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .card b {
-      color: #1976D2;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
     .logout-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
       background: #e53935;
       color: white;
       border: none;
       padding: 10px 20px;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      float: right;
-      margin: 10px;
     }
     .admin-info {
       text-align: center;
       font-weight: bold;
+      margin: 10px 0 30px;
       color: green;
-      margin: 10px 0 20px;
     }
   </style>
 </head>
@@ -52,17 +69,16 @@
 
 <h2>🔐 ZaraFix Admin Dashboard</h2>
 <div class="admin-info" id="adminEmail">Checking admin login...</div>
-<button class="logout-btn" onclick="logout()">Logout</button>
 
-<div>
-  <div class="section-title">🛠️ Posters (Service Providers)</div>
-  <div id="posterList"></div>
+<button class="btn3d" onclick="toggleSection('postersSection')">🛠️ Posters (Service Providers)</button>
+<div id="postersSection" class="section"></div>
 
-  <div class="section-title">📦 User Service Requests</div>
-  <div id="requestList"></div>
-</div>
+<button class="btn3d" onclick="toggleSection('requestsSection')">📦 User Service Requests</button>
+<div id="requestsSection" class="section"></div>
 
-<!-- Firebase Scripts -->
+<button class="logout-btn" onclick="logout()">🚪 Logout</button>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -78,11 +94,11 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-const adminEmail = "admin@gmail.com"; // <-- yahan apna real admin email likho
+const adminEmail = "admin@gmail.com"; // 👈 Change to your real admin Gmail
 
 firebase.auth().onAuthStateChanged(user => {
   if (!user || user.email !== adminEmail) {
-    alert("❌ Access Denied. Only Admin Allowed.");
+    alert("❌ Access denied. Only admin allowed.");
     window.location.href = "index.html";
     return;
   }
@@ -98,10 +114,15 @@ function logout() {
   });
 }
 
+function toggleSection(id) {
+  const section = document.getElementById(id);
+  section.style.display = section.style.display === "block" ? "none" : "block";
+}
+
 function loadPosters() {
-  const list = document.getElementById("posterList");
+  const container = document.getElementById("postersSection");
   firebase.database().ref("posters").once("value", snap => {
-    list.innerHTML = "";
+    container.innerHTML = "";
     snap.forEach(p => {
       const d = p.val();
       const card = document.createElement("div");
@@ -113,15 +134,15 @@ function loadPosters() {
         💼 Category: ${d.category}<br>
         💰 Wallet: ₹${d.wallet || 0}
       `;
-      list.appendChild(card);
+      container.appendChild(card);
     });
   });
 }
 
 function loadRequests() {
-  const list = document.getElementById("requestList");
+  const container = document.getElementById("requestsSection");
   firebase.database().ref("requests").once("value", snap => {
-    list.innerHTML = "";
+    container.innerHTML = "";
     snap.forEach(r => {
       const d = r.val();
       const card = document.createElement("div");
@@ -132,10 +153,10 @@ function loadRequests() {
         📱 WhatsApp: ${d.whatsapp}<br>
         📦 Category: ${d.category}<br>
         💬 Issue: ${d.issue}<br>
-        📍 Timestamp: ${d.timestamp || "N/A"}<br>
+        🕒 ${d.timestamp || "N/A"}<br>
         ✅ Accepted By: ${d.acceptedBy ? Object.keys(d.acceptedBy).length : 0}
       `;
-      list.appendChild(card);
+      container.appendChild(card);
     });
   });
 }
