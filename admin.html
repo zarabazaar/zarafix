@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZaraFix - Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background: #eef2f3; margin:0; padding:20px; }
+    h2 { text-align:center; }
+    .card {
+      background:white; margin:15px auto; padding:15px;
+      border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      max-width:700px;
+    }
+    .card h3 { margin:0 0 10px; }
+    .btn {
+      padding:8px 16px; background:#2196F3; color:white;
+      border:none; border-radius:8px; cursor:pointer;
+      margin-top:10px;
+    }
+    .btn:hover { background:#0d8ddb; }
+    .section-title {
+      font-size:20px; color:#333; border-bottom:2px solid #2196F3; padding-bottom:5px;
+      margin-top:30px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔐 ZaraFix - Admin Dashboard</h2>
+
+  <div id="postersSection">
+    <div class="section-title">🛠️ Posters (Service Providers)</div>
+  </div>
+
+  <div id="requestsSection">
+    <div class="section-title">📦 Service Requests</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const postersRef = firebase.database().ref("posters");
+    const requestsRef = firebase.database().ref("requests");
+
+    // Load Posters
+    postersRef.once("value", snap => {
+      const posters = snap.val();
+      for (let uid in posters) {
+        const p = posters[uid];
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <h3>👨‍🔧 ${p.name} (${p.category})</h3>
+          🏪 ${p.shop}<br>
+          📍 ${p.address}<br>
+          📱 ${p.whatsapp}<br>
+          💰 Wallet: ₹<b id="wallet-${uid}">${p.wallet || 0}</b><br>
+          <button class="btn" onclick="recharge('${uid}')">➕ Recharge ₹100</button>
+        `;
+        document.getElementById("postersSection").appendChild(div);
+      }
+    });
+
+    // Load Requests and Accepted Posters
+    requestsRef.once("value", snap => {
+      const all = snap.val();
+      for (let key in all) {
+        const r = all[key];
+        const div = document.createElement("div");
+        div.className = "card";
+        let acceptedList = "";
+
+        if (r.acceptedBy) {
+          for (let posterId in r.acceptedBy) {
+            acceptedList += `<li>${posterId}</li>`;
+          }
+        } else {
+          acceptedList = "<i>No one accepted yet</i>";
+        }
+
+        div.innerHTML = `
+          <h3>📨 ${r.name} - ${r.category}</h3>
+          📞 WhatsApp: ${r.whatsapp}<br>
+          🏠 ${r.address}, ${r.city}, ${r.pincode}<br>
+          🔧 Issue: ${r.issue}<br>
+          🕒 ${r.timestamp || ""}<br><br>
+          ✅ Accepted By:
+          <ul>${acceptedList}</ul>
+        `;
+        document.getElementById("requestsSection").appendChild(div);
+      }
+    });
+
+    // Recharge Function
+    function recharge(uid) {
+      const wref = firebase.database().ref("posters/" + uid + "/wallet");
+      wref.once("value", snap => {
+        let current = snap.val() || 0;
+        let updated = current + 100;
+        wref.set(updated);
+        document.getElementById("wallet-" + uid).textContent = updated;
+        alert("✅ ₹100 added to wallet.");
+      });
+    }
+  </script>
+</body>
+</html>
