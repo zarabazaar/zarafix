@@ -1,34 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Google Login Only</title>
+  <title>ZaraFix - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; text-align: center; padding: 40px; background: #e3f2fd; }
+    body { text-align: center; font-family: Arial; background: #f1f1f1; padding: 60px; }
     button {
       padding: 15px 25px;
       font-size: 18px;
-      border: none;
-      border-radius: 12px;
       background: #db4437;
       color: white;
+      border: none;
+      border-radius: 12px;
       cursor: pointer;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
-    button:hover {
-      background: #c23321;
-    }
-    #msg { color: red; margin-top: 20px; }
+    button:hover { background: #c23321; }
+    #msg { margin-top: 15px; color: red; }
   </style>
 </head>
 <body>
-
-  <h2>🔐 ZaraFix Login with Google</h2>
+  <h2>🔐 Login to ZaraFix</h2>
   <button onclick="googleLogin()">Login with Google</button>
-
   <p id="msg"></p>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
@@ -44,24 +39,21 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .then(() => {
-          window.location.href = "welcome.html";
-        })
-        .catch(e => {
-          document.getElementById("msg").innerText = e.message;
-        });
-    }
-
-    // Agar pehle se login hai, to sidha welcome.html par bhejo
+    // redirect if already logged in
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         window.location.href = "welcome.html";
       }
     });
-  </script>
 
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .then(() => window.location.href = "welcome.html")
+        .catch(error => {
+          document.getElementById("msg").innerText = error.message;
+        });
+    }
+  </script>
 </body>
 </html>
