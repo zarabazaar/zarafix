@@ -1,118 +1,145 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Admin Dashboard</title>
+  <title>🔐 ZaraFix Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; background:#f1f1f1; margin:0; padding:20px; }
-    h2 { text-align:center; color:#333; }
-    .section {
-      max-width: 800px; margin: 20px auto;
-      background: #fff; padding: 20px;
-      border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .section-title {
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #222;
     }
     .card {
-      background: #f9f9f9; margin: 10px 0;
-      padding: 12px; border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      background: #fff;
+      margin: 10px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .wallet { color: green; font-weight: bold; }
-    .btn { background: #2196F3; color: white; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; }
-    .btn:hover { background: #1976D2; }
-    .logout-btn { background: #d32f2f; float: right; }
-    .admin-email { font-size: 14px; color: gray; text-align: right; margin-bottom: 10px; }
+    .card b {
+      color: #1976D2;
+    }
+    .logout-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      float: right;
+      margin: 10px;
+    }
+    .admin-info {
+      text-align: center;
+      font-weight: bold;
+      color: green;
+      margin: 10px 0 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>🔐 ZaraFix Admin Dashboard</h2>
-  <div class="admin-email" id="adminEmail">Checking...</div>
-  <button class="btn logout-btn" onclick="logout()">Logout</button>
 
-  <div class="section">
-    <h3>🛠️ Posters (Service Providers)</h3>
-    <div id="posterList">Loading...</div>
-  </div>
+<h2>🔐 ZaraFix Admin Dashboard</h2>
+<div class="admin-info" id="adminEmail">Checking admin login...</div>
+<button class="logout-btn" onclick="logout()">Logout</button>
 
-  <div class="section">
-    <h3>📦 User Service Requests</h3>
-    <div id="requestList">Loading...</div>
-  </div>
+<div>
+  <div class="section-title">🛠️ Posters (Service Providers)</div>
+  <div id="posterList"></div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
+  <div class="section-title">📦 User Service Requests</div>
+  <div id="requestList"></div>
+</div>
 
-    const adminEmail = "admin@example.com"; // 🔁 Change this to your real admin email
-    let currentUser;
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+  authDomain: "zara-fix.firebaseapp.com",
+  databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+  projectId: "zara-fix",
+  storageBucket: "zara-fix.appspot.com",
+  messagingSenderId: "476473209200",
+  appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+};
+firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user || user.email !== adminEmail) {
-        alert("🚫 Access Denied: Only Admin Allowed.");
-        return window.location.href = "index.html";
-      }
-      currentUser = user;
-      document.getElementById("adminEmail").innerText = "👤 " + user.email;
-      loadPosters(); loadRequests();
+const adminEmail = "admin@gmail.com"; // <-- yahan apna real admin email likho
+
+firebase.auth().onAuthStateChanged(user => {
+  if (!user || user.email !== adminEmail) {
+    alert("❌ Access Denied. Only Admin Allowed.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("adminEmail").innerText = "👤 " + user.email;
+  loadPosters();
+  loadRequests();
+});
+
+function logout() {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "index.html";
+  });
+}
+
+function loadPosters() {
+  const list = document.getElementById("posterList");
+  firebase.database().ref("posters").once("value", snap => {
+    list.innerHTML = "";
+    snap.forEach(p => {
+      const d = p.val();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <b>${d.name}</b> (${d.shop})<br>
+        📍 ${d.address}<br>
+        📱 WhatsApp: ${d.whatsapp}<br>
+        💼 Category: ${d.category}<br>
+        💰 Wallet: ₹${d.wallet || 0}
+      `;
+      list.appendChild(card);
     });
+  });
+}
 
-    function logout() {
-      firebase.auth().signOut().then(() => window.location.href = "index.html");
-    }
+function loadRequests() {
+  const list = document.getElementById("requestList");
+  firebase.database().ref("requests").once("value", snap => {
+    list.innerHTML = "";
+    snap.forEach(r => {
+      const d = r.val();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <b>${d.name}</b> - ${d.city}<br>
+        🏠 ${d.address}, ${d.pincode}<br>
+        📱 WhatsApp: ${d.whatsapp}<br>
+        📦 Category: ${d.category}<br>
+        💬 Issue: ${d.issue}<br>
+        📍 Timestamp: ${d.timestamp || "N/A"}<br>
+        ✅ Accepted By: ${d.acceptedBy ? Object.keys(d.acceptedBy).length : 0}
+      `;
+      list.appendChild(card);
+    });
+  });
+}
+</script>
 
-    function loadPosters() {
-      const posterList = document.getElementById("posterList");
-      firebase.database().ref("posters").once("value", snap => {
-        posterList.innerHTML = "";
-        if (!snap.exists()) return posterList.innerHTML = "❌ No posters found.";
-        snap.forEach(child => {
-          const p = child.val();
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            <b>${p.name}</b> (${p.category})<br>
-            🏪 ${p.shop}<br>
-            📍 ${p.address}<br>
-            📱 <a href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a><br>
-            💰 Wallet: <span class="wallet">₹${p.wallet || 0}</span><br>
-          `;
-          posterList.appendChild(div);
-        });
-      });
-    }
-
-    function loadRequests() {
-      const requestList = document.getElementById("requestList");
-      firebase.database().ref("requests").once("value", snap => {
-        requestList.innerHTML = "";
-        if (!snap.exists()) return requestList.innerHTML = "❌ No requests found.";
-        snap.forEach(child => {
-          const r = child.val();
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            <b>${r.name}</b> - ${r.category}<br>
-            📍 ${r.address}, ${r.city} - ${r.pincode}<br>
-            📱 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
-            💬 ${r.issue}<br>
-            🕒 ${r.timestamp || "N/A"}<br>
-            👥 Accepted by: ${r.acceptedBy ? Object.keys(r.acceptedBy).length : 0}
-          `;
-          requestList.appendChild(div);
-        });
-      });
-    }
-  </script>
 </body>
 </html>
