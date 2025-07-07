@@ -1,63 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Zara Fix - Login / Register</title>
+  <title>ZaraFix - Welcome/Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: Arial; text-align: center;
-      padding: 40px; background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 30px;
+      text-align: center;
     }
     .card {
-      max-width: 400px; margin: auto;
-      background: white; padding: 25px;
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 25px;
       border-radius: 16px;
       box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     }
     input {
-      padding: 10px; margin: 10px 0;
-      width: 90%; border-radius: 8px;
+      padding: 10px;
+      margin: 10px 0;
+      width: 90%;
+      border-radius: 8px;
       border: 1px solid #ccc;
     }
-    button {
-      padding: 10px 20px; margin-top: 10px;
-      background: #4CAF50; color: white;
-      border: none; border-radius: 8px;
-      cursor: pointer; font-weight: bold;
+    button, .btn {
+      padding: 12px 25px;
+      margin: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white;
+      font-size: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
-    button:hover {
+    button:hover, .btn:hover {
       transform: scale(1.05);
+    }
+    .logout-btn {
+      background: #e53935;
     }
     .toggle-link {
       color: #007BFF; cursor: pointer;
-      text-decoration: underline; font-size: 14px;
+      text-decoration: underline;
+      font-size: 14px;
+    }
+    #dashboard, #userInfo {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
+  <!-- LOGIN CARD -->
+  <div class="card" id="loginCard">
     <h2 id="formTitle">🔐 Login to ZaraFix</h2>
-
     <input type="email" id="email" placeholder="Email"><br>
     <input type="password" id="password" placeholder="Password"><br>
 
     <div id="loginSection">
-      <button onclick="emailLogin()">Login with Email</button><br><br>
-      <button onclick="googleLogin()">Login with Google</button><br><br>
+      <button onclick="emailLogin()">Login with Email</button><br>
+      <button onclick="googleLogin()">Login with Google</button><br>
       <p>Don't have an account? <span class="toggle-link" onclick="toggleForm()">Register here</span></p>
     </div>
 
     <div id="registerSection" style="display:none;">
-      <button onclick="emailRegister()">Register with Email</button><br><br>
+      <button onclick="emailRegister()">Register with Email</button><br>
       <p>Already have an account? <span class="toggle-link" onclick="toggleForm()">Login here</span></p>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- DASHBOARD -->
+  <div id="dashboard" style="display:none;">
+    <h2>🎉 Welcome to ZaraFix</h2>
+    <div id="userInfo"></div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button><br><br>
+
+    <a href="#" class="btn">📋 Post Request</a>
+    <a href="#" class="btn">🧰 Poster Dashboard</a>
+    <a href="#" class="btn">💳 Wallet Recharge</a>
+    <a href="#" class="btn">📊 Admin Panel</a>
+  </div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -70,11 +100,21 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    // 🔁 Check Login State
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        showDashboard(user);
+      } else {
+        document.getElementById("loginCard").style.display = "block";
+        document.getElementById("dashboard").style.display = "none";
+      }
+    });
+
     function emailLogin() {
       const email = document.getElementById("email").value;
       const pass = document.getElementById("password").value;
       firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => window.location.href = "welcome.html")
+        .then(res => showDashboard(res.user))
         .catch(err => alert("❌ " + err.message));
     }
 
@@ -82,22 +122,34 @@
       const email = document.getElementById("email").value;
       const pass = document.getElementById("password").value;
       firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => window.location.href = "welcome.html")
+        .then(res => showDashboard(res.user))
         .catch(err => alert("❌ " + err.message));
     }
 
     function googleLogin() {
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithPopup(provider)
-        .then(() => window.location.href = "welcome.html")
-        .catch(error => alert("❌ " + error.message));
+        .then(res => showDashboard(res.user))
+        .catch(err => alert("❌ " + err.message));
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => location.reload());
+    }
+
+    function showDashboard(user) {
+      document.getElementById("loginCard").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("userInfo").innerHTML = `
+        👤 <b>${user.displayName || "User"}</b><br>
+        📧 ${user.email}
+      `;
     }
 
     function toggleForm() {
       const loginSection = document.getElementById("loginSection");
       const registerSection = document.getElementById("registerSection");
       const title = document.getElementById("formTitle");
-
       if (loginSection.style.display === "none") {
         loginSection.style.display = "block";
         registerSection.style.display = "none";
