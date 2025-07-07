@@ -1,33 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🛠️ Posters - ZaraFix</title>
+  <title>🛠️ ZaraFix Admin - Posters</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial;
-      background: #f2f2f2;
-      padding: 20px;
-    }
-    h2 {
-      text-align: center;
-    }
+    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
+    h2 { text-align: center; }
     .card {
-      background: white;
-      padding: 15px;
-      margin: 15px auto;
-      border-radius: 10px;
-      max-width: 500px;
+      background: white; padding: 15px; margin: 15px auto;
+      border-radius: 10px; max-width: 500px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .btn {
-      margin: 5px 4px 0 0;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
+      margin: 5px 5px 0 0; padding: 8px 16px;
+      border: none; border-radius: 6px;
+      color: white; font-size: 14px; cursor: pointer;
     }
     .approve { background: #4CAF50; }
     .reject { background: #f44336; }
@@ -59,55 +46,74 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    const postersDiv = document.getElementById("posters");
+    const adminUID = "YOUR_ADMIN_UID_HERE"; // 👈 change this to your UID
 
     firebase.auth().onAuthStateChanged(user => {
-      if (!user) return location.href = "login.html";
-    });
+      if (!user || user.uid !== adminUID) {
+        alert("Access denied. Admins only.");
+        window.location.href = "login.html";
+        return;
+      }
 
-    firebase.database().ref("posters").once("value", snapshot => {
-      snapshot.forEach(child => {
-        const data = child.val();
-        const uid = child.key;
+      const postersDiv = document.getElementById("posters");
 
-        const card = document.createElement("div");
-        card.className = "card";
+      firebase.database().ref("posters").once("value", snapshot => {
+        snapshot.forEach(child => {
+          const uid = child.key;
+          const data = child.val();
 
-        card.innerHTML = `
-          <b>${data.name || "No Name"}</b> (${data.category || 'No Category'})<br>
-          🛒 Shop: ${data.shop || ''}<br>
-          📍 Address: ${data.address || ''}<br>
-          📱 WhatsApp: ${data.whatsapp || ''}<br>
-          ✉️ Email: ${data.email || ''}<br>
-          💰 Wallet: ₹${data.wallet || 0}<br>
-          Status: <span id="status-${uid}">${data.approved ? "✅ Approved" : (data.approved === false ? "❌ Rejected" : "⏳ Pending")}</span><br>
-          <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
-          <button class="btn reject" onclick="rejectPoster('${uid}')">❌ Reject</button>
-          <button class="btn delete" onclick="deletePoster('${uid}')">🗑 Delete</button>
-          <button class="btn recharge" onclick="rechargeWallet('${uid}')">💰 +₹100</button>
-        `;
+          // Auto-fill missing fields
+          const name = data.name || "No Name";
+          const shop = data.shop || "No Shop";
+          const address = data.address || "No Address";
+          const whatsapp = data.whatsapp || "Not Provided";
+          const category = data.category || "Unknown";
+          const email = data.email || "No Email";
+          const wallet = data.wallet || 0;
+          const approved = data.approved;
 
-        postersDiv.appendChild(card);
+          // If any field was missing, update it to Firebase
+          const updatedData = { name, shop, address, whatsapp, category, email, wallet };
+          firebase.database().ref("posters/" + uid).update(updatedData);
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <b>${name}</b> (${category})<br>
+            🛒 Shop: ${shop}<br>
+            📍 Address: ${address}<br>
+            📱 WhatsApp: ${whatsapp}<br>
+            ✉️ Email: ${email}<br>
+            💰 Wallet: ₹${wallet}<br>
+            Status: <span id="status-${uid}">${approved === true ? "✅ Approved" : (approved === false ? "❌ Rejected" : "⏳ Pending")}</span><br>
+            <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
+            <button class="btn reject" onclick="rejectPoster('${uid}')">❌ Reject</button>
+            <button class="btn delete" onclick="deletePoster('${uid}')">🗑 Delete</button>
+            <button class="btn recharge" onclick="rechargeWallet('${uid}')">💰 +₹100</button>
+          `;
+          postersDiv.appendChild(card);
+        });
       });
     });
 
     function approvePoster(uid) {
       firebase.database().ref("posters/" + uid + "/approved").set(true).then(() => {
         document.getElementById("status-" + uid).innerText = "✅ Approved";
-        alert("Approved successfully.");
+        alert("✅ Approved");
       });
     }
 
     function rejectPoster(uid) {
       firebase.database().ref("posters/" + uid + "/approved").set(false).then(() => {
         document.getElementById("status-" + uid).innerText = "❌ Rejected";
-        alert("Rejected.");
+        alert("❌ Rejected");
       });
     }
 
     function deletePoster(uid) {
       if (confirm("Are you sure you want to delete this poster?")) {
         firebase.database().ref("posters/" + uid).remove().then(() => {
+          alert("🗑 Deleted");
           location.reload();
         });
       }
@@ -116,9 +122,9 @@
     function rechargeWallet(uid) {
       const walletRef = firebase.database().ref("posters/" + uid + "/wallet");
       walletRef.once("value", snap => {
-        let current = snap.val() || 0;
+        const current = snap.val() || 0;
         walletRef.set(current + 100).then(() => {
-          alert("Wallet recharged ₹100.");
+          alert("💰 Wallet recharged ₹100");
           location.reload();
         });
       });
