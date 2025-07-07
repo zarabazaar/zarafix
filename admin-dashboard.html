@@ -4,20 +4,9 @@
   <title>🛠️ ZaraFix Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    .grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
-    }
+    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+    h1, h2 { text-align: center; }
+    .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
     .card {
       background: white;
       border-radius: 12px;
@@ -26,9 +15,7 @@
       width: 280px;
       transition: transform 0.2s;
     }
-    .card:hover {
-      transform: scale(1.03);
-    }
+    .card:hover { transform: scale(1.03); }
     button {
       padding: 8px 12px;
       border: none;
@@ -38,9 +25,7 @@
       cursor: pointer;
       margin-top: 10px;
     }
-    button:hover {
-      background: #27ae60;
-    }
+    button:hover { background: #27ae60; }
   </style>
 </head>
 <body>
@@ -52,112 +37,97 @@
   <h2>📋 All User Requests</h2>
   <div id="requestList" class="grid"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyA0xVTGpxrxbPTK0gFbmbDZSW5wXlQjb",
-      authDomain: "zarafix.firebaseapp.com",
-      databaseURL: "https://zarafix-default-rtdb.firebaseio.com",
-      projectId: "zarafix",
-      storageBucket: "zarafix.appspot.com",
-      messagingSenderId: "78118743126",
-      appId: "1:78118743126:web:2f0e6e6d14c29cf64088ff"
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
     };
+    firebase.initializeApp(firebaseConfig);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase();
-    const auth = getAuth();
+    const db = firebase.database();
+    const auth = firebase.auth();
 
-    // 🔐 Admin Login Check
-    onAuthStateChanged(auth, (user) => {
+    auth.onAuthStateChanged(user => {
       if (!user) {
-        console.warn("❌ User not logged in. Redirecting...");
+        alert("Please login first.");
         return window.location.href = "index.html";
       }
 
-      console.log("✅ Logged in user UID:", user.uid);
-
-      get(ref(db, "users/" + user.uid)).then(snap => {
-        const userData = snap.val();
-        console.log("📂 User data from Firebase:", userData);
-
-        if (snap.exists() && userData && userData.isAdmin === true) {
-          console.log("✅ Admin verified");
+      const uid = user.uid;
+      firebase.database().ref("users/" + uid).once("value").then(snap => {
+        const data = snap.val();
+        if (data && data.isAdmin === true) {
           loadPosters();
           loadRequests();
         } else {
-          console.warn("⛔ Not an admin. Redirecting...");
-          alert("Access denied. Admins only.");
+          alert("Access denied. Admin only.");
           window.location.href = "index.html";
         }
-      }).catch(err => {
-        console.error("🔥 Error checking admin:", err);
       });
     });
 
-    // 🧾 Load Posters
     function loadPosters() {
-      const postersDiv = document.getElementById("posterList");
-      get(ref(db, "posters")).then(snapshot => {
-        postersDiv.innerHTML = "";
+      const posterList = document.getElementById("posterList");
+      db.ref("posters").once("value", snapshot => {
+        posterList.innerHTML = "";
         snapshot.forEach(child => {
-          const data = child.val();
-          postersDiv.innerHTML += `
+          const p = child.val();
+          posterList.innerHTML += `
             <div class="card">
-              <strong>${data.name}</strong><br>
-              🛠️ ${data.category}<br>
-              📍 ${data.address}<br>
-              💰 Wallet: ₹${data.wallet || 0}<br>
-              📞 <a href="https://wa.me/${data.whatsapp}" target="_blank">${data.whatsapp}</a><br>
-              <button type="button" onclick="recharge('${child.key}')">Recharge ₹100</button>
+              <strong>${p.name}</strong><br>
+              🛠️ ${p.category}<br>
+              📍 ${p.address}<br>
+              💰 Wallet: ₹${p.wallet || 0}<br>
+              📞 <a href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a><br>
+              <button onclick="recharge('${child.key}')">Recharge ₹100</button>
             </div>
           `;
         });
-      }).catch(err => console.error("❌ Error loading posters:", err));
+      });
     }
 
-    // 📋 Load User Requests
     function loadRequests() {
-      const requestsDiv = document.getElementById("requestList");
-      get(ref(db, "requests")).then(snapshot => {
-        requestsDiv.innerHTML = "";
+      const reqList = document.getElementById("requestList");
+      db.ref("requests").once("value", snapshot => {
+        reqList.innerHTML = "";
         snapshot.forEach(userSnap => {
           userSnap.forEach(reqSnap => {
-            const data = reqSnap.val();
-            const accepted = data.acceptedBy
-              ? Object.values(data.acceptedBy).map(x => x.name).join(", ")
+            const r = reqSnap.val();
+            const accepted = r.acceptedBy
+              ? Object.values(r.acceptedBy).map(x => x.name).join(", ")
               : "None";
-            requestsDiv.innerHTML += `
+            reqList.innerHTML += `
               <div class="card">
-                <b>Issue:</b> ${data.issue}<br>
-                📍 ${data.address}, ${data.pincode}<br>
-                📞 <a href="https://wa.me/${data.whatsapp}" target="_blank">${data.whatsapp}</a><br>
+                <b>Issue:</b> ${r.issue}<br>
+                📍 ${r.address}, ${r.pincode}<br>
+                📞 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
                 ✅ Accepted By: ${accepted}
               </div>
             `;
           });
         });
-      }).catch(err => console.error("❌ Error loading requests:", err));
+      });
     }
 
-    // 💸 Recharge Poster Wallet
-    window.recharge = function(uid) {
-      const walletRef = ref(db, "posters/" + uid + "/wallet");
-      get(walletRef).then(snap => {
+    function recharge(uid) {
+      const walletRef = db.ref("posters/" + uid + "/wallet");
+      walletRef.once("value").then(snap => {
         const current = snap.val() || 0;
-        update(ref(db, "posters/" + uid), { wallet: current + 100 })
-          .then(() => {
-            alert("✅ ₹100 added to wallet.");
-            loadPosters();
-          })
-          .catch(err => {
-            console.error("❌ Recharge failed:", err);
-          });
+        db.ref("posters/" + uid).update({ wallet: current + 100 });
+        alert("✅ ₹100 added to wallet.");
+        loadPosters();
       });
-    };
+    }
   </script>
 </body>
 </html>
