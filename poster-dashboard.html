@@ -70,6 +70,7 @@
   </div>
 </div>
 
+<!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -89,22 +90,33 @@ let currentUser, posterRef;
 
 firebase.auth().onAuthStateChanged(user => {
   currentUser = user;
-  if (!user) return document.getElementById("authSection").classList.remove("hidden");
+  if (!user) {
+    document.getElementById("authSection").classList.remove("hidden");
+    return;
+  }
   document.getElementById("authSection").classList.add("hidden");
 
   posterRef = firebase.database().ref("posters/" + user.uid);
   posterRef.once("value", snap => {
     const data = snap.val();
+
     if (data && data.userId === user.uid) {
-      if (data.wallet >= 100) {
-        document.getElementById("posterDashboard").classList.remove("hidden");
-        document.getElementById("walletAmt2").textContent = data.wallet;
-        deductDailyCharge();
-        loadJobs(data.category);
+      if (data.approved === true) {
+        const w = data.wallet || 0;
+        if (w >= 100) {
+          document.getElementById("posterDashboard").classList.remove("hidden");
+          document.getElementById("walletAmt2").textContent = w;
+          deductDailyCharge();
+          loadJobs(data.category);
+        } else {
+          document.getElementById("registerForm").classList.remove("hidden");
+          document.getElementById("walletAmt").textContent = w;
+          document.getElementById("regMsg").textContent = "❌ Please recharge your wallet.";
+        }
       } else {
         document.getElementById("registerForm").classList.remove("hidden");
-        document.getElementById("walletAmt").textContent = data.wallet;
-        document.getElementById("regMsg").textContent = "❌ Please recharge your wallet.";
+        document.getElementById("walletAmt").textContent = data.wallet || 0;
+        document.getElementById("regMsg").textContent = "⏳ Waiting for admin approval...";
       }
     } else {
       document.getElementById("registerForm").classList.remove("hidden");
@@ -125,8 +137,24 @@ function submitPoster() {
   const wa = document.getElementById("whatsapp").value.trim();
   if (!name || !shop || !addr || !cat || !wa) return alert("All fields required!");
 
-  const data = { name, shop, address: addr, category: cat, whatsapp: wa, wallet: 0, userId: currentUser.uid };
-  posterRef.set(data).then(() => location.reload());
+  const data = {
+    name, shop, address: addr, category: cat, whatsapp: wa,
+    wallet: 0, userId: currentUser.uid, approved: false
+  };
+
+  posterRef.set(data).then(() => {
+    const rechargeRef = firebase.database().ref("rechargeRequests/" + currentUser.uid);
+    rechargeRef.set({
+      userId: currentUser.uid,
+      name, whatsapp: wa,
+      amount: 100,
+      status: "pending",
+      timestamp: Date.now()
+    }).then(() => {
+      alert("💰 ₹100 Recharge request submitted. Waiting for admin approval.");
+      location.reload();
+    });
+  });
 }
 
 function deductDailyCharge() {
