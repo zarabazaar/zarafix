@@ -1,3 +1,4 @@
+<!-- File: welcome.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,10 +11,7 @@
       text-align: center;
       padding: 30px;
     }
-    h2 {
-      font-size: 28px;
-      color: #333;
-    }
+    h2 { font-size: 28px; color: #333; }
     .btn {
       display: inline-block;
       margin: 20px;
@@ -28,29 +26,25 @@
       text-decoration: none;
       transition: transform 0.3s;
     }
-    .btn:hover {
-      transform: scale(1.08);
-    }
+    .btn:hover { transform: scale(1.08); }
     .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
     .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
     .purple { background: linear-gradient(to right, #9C27B0, #6A1B9A); }
-    .logout {
-      margin-top: 40px;
-      background: #444;
-    }
+    .logout { margin-top: 40px; background: #444; }
   </style>
 </head>
 <body>
+
   <h2>👋 Welcome to <b>ZaraFix</b></h2>
 
-  <div id="buttons">
-    <a class="btn green" href="service-request.html">📋 Service Request</a>
-    <a class="btn blue" href="poster-dashboard.html">🧰 Poster Dashboard</a>
-    <a class="btn purple" href="admin.html">🛠️ Admin Dashboard</a>
-  </div>
+  <a class="btn green" href="service-request.html">📋 Service Request</a>
+  <a class="btn blue" href="poster-dashboard.html">🧰 Poster Dashboard</a>
+  <a class="btn purple" href="admin.html">🛠️ Admin Dashboard</a>
 
+  <br><br>
   <button class="btn logout" onclick="logout()">🚪 Logout</button>
 
+  <!-- Firebase Auth Check -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script>
@@ -66,15 +60,11 @@
     firebase.initializeApp(firebaseConfig);
 
     firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "login.html";
-      }
+      if (!user) window.location.href = "login.html";
     });
 
     function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "login.html";
-      });
+      firebase.auth().signOut().then(() => window.location.href = "login.html");
     }
   </script>
 </body>
