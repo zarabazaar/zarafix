@@ -1,14 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix</title>
+  <title>ZaraFix - Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-  <h2>Checking login status...</h2>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e3f2fd;
+      margin: 0;
+      padding: 30px;
+      text-align: center;
+    }
 
+    #content {
+      display: none;
+    }
+
+    h2 {
+      color: #0d47a1;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      margin: 12px;
+      padding: 16px 28px;
+      font-size: 18px;
+      color: white;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      text-decoration: none;
+      transition: transform 0.3s;
+    }
+
+    .btn:hover {
+      transform: scale(1.08);
+    }
+
+    .green { background: linear-gradient(to right, #43a047, #66bb6a); }
+    .blue { background: linear-gradient(to right, #1e88e5, #42a5f5); }
+    .purple { background: linear-gradient(to right, #8e24aa, #ba68c8); }
+    .logout { background: #e53935; }
+
+    #loading {
+      font-size: 20px;
+      color: #555;
+    }
+  </style>
+</head>
+<body onload="checkLogin()">
+
+  <div id="loading">⏳ Checking login...</div>
+
+  <div id="content">
+    <h2>👋 Welcome to <b>ZaraFix</b></h2>
+
+    <div>
+      <a class="btn green" href="service-request.html">📋 Service Request</a>
+      <a class="btn blue" href="poster-dashboard.html">🧰 Poster Dashboard</a>
+      <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+    </div>
+
+    <br>
+    <button class="btn logout" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -21,13 +82,23 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        window.location.href = "dashboard.html";
-      } else {
+    function checkLogin() {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("content").style.display = "block";
+        } else {
+          window.location.href = "login.html";
+        }
+      });
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
         window.location.href = "login.html";
-      }
-    });
+      });
+    }
   </script>
+
 </body>
 </html>
