@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🧰 ZaraFix - Poster Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #f0f8ff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .input-field {
+      width: 80%;
+      max-width: 350px;
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      font-size: 16px;
+    }
+
+    .btn3d {
+      padding: 15px 30px;
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .btn3d:hover {
+      transform: scale(1.05);
+    }
+
+    #msg {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🧰 Service Provider Registration</h2>
+
+  <input class="input-field" id="name" placeholder="Your Name"><br>
+  <input class="input-field" id="shop" placeholder="Shop Name"><br>
+  <input class="input-field" id="address" placeholder="Address"><br>
+  <input class="input-field" id="whatsapp" placeholder="WhatsApp Number"><br>
+  
+  <select class="input-field" id="category">
+    <option value="">Select Category</option>
+    <option value="AC Repair">AC Repair</option>
+    <option value="Mobile Repair">Mobile Repair</option>
+    <option value="Plumber">Plumber</option>
+    <option value="Electrician">Electrician</option>
+    <option value="Computer Repair">Computer Repair</option>
+  </select><br>
+
+  <button class="btn3d" onclick="submitPosterForm()">✅ Register</button>
+
+  <p id="msg"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    function submitPosterForm() {
+      const name = document.getElementById("name").value.trim();
+      const shop = document.getElementById("shop").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const whatsapp = document.getElementById("whatsapp").value.trim();
+      const category = document.getElementById("category").value;
+
+      if (!name || !shop || !address || !whatsapp || !category) {
+        document.getElementById("msg").innerText = "⚠️ Please fill all fields.";
+        return;
+      }
+
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          const uid = user.uid;
+          const email = user.email;
+
+          firebase.database().ref("posters/" + uid).set({
+            name: name,
+            shop: shop,
+            address: address,
+            whatsapp: whatsapp,
+            category: category,
+            email: email
+          }).then(() => {
+            alert("✅ Registered Successfully!");
+            window.location.href = "poster-dashboard.html";
+          });
+        } else {
+          window.location.href = "login.html";
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
