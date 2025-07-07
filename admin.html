@@ -1,62 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🔐 ZaraFix Admin Dashboard</title>
+  <title>🛠️ Posters - ZaraFix Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 30px;
-      text-align: center;
-    }
-
-    h2 {
-      color: #222;
-      margin-bottom: 30px;
-    }
-
-    .btn3d {
-      display: inline-block;
-      margin: 15px;
-      padding: 20px 40px;
-      font-size: 18px;
-      color: white;
-      background: linear-gradient(to right, #2196F3, #21CBF3);
-      border: none;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      text-decoration: none;
-      transition: transform 0.2s ease;
-    }
-
-    .btn3d:hover {
-      transform: scale(1.05);
-    }
-
-    #userInfo {
-      font-size: 16px;
-      margin-bottom: 30px;
-      color: #444;
+    body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+    h2 { text-align: center; }
+    .card {
+      background: white; padding: 15px; margin: 10px 0;
+      border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
+  <h2>🛠️ All Posters (Service Providers)</h2>
+  <div id="posterList">Loading...</div>
 
-  <h2>🔐 ZaraFix Admin Dashboard</h2>
-  <div id="userInfo">Checking login...</div>
-
-  <!-- Working 3D Buttons -->
-  <a class="btn3d" href="admin-posters.html">🛠️ Posters (Service Providers)</a>
-  <a class="btn3d" href="admin-requests.html">📦 User Service Requests</a>
-
-  <br><br>
-  <button class="btn3d" style="background: #e53935" onclick="logout()">🚪 Logout</button>
-
-  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -70,22 +31,22 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("userInfo").innerHTML = `
-          👤 <b>${user.displayName || 'Admin'}</b><br>📧 ${user.email}
+    const list = document.getElementById("posterList");
+    firebase.database().ref("posters").once("value", snap => {
+      list.innerHTML = "";
+      snap.forEach(child => {
+        const p = child.val();
+        list.innerHTML += `
+          <div class="card">
+            <b>${p.name}</b> (${p.category})<br>
+            🏪 ${p.shop}<br>
+            📍 ${p.address}<br>
+            📱 ${p.whatsapp}<br>
+            💰 Wallet: ₹${p.wallet || 0}
+          </div>
         `;
-      } else {
-        window.location.href = "index.html";
-      }
-    });
-
-    function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "index.html";
       });
-    }
+    });
   </script>
-
 </body>
 </html>
