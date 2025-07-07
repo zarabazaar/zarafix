@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Welcome - ZaraFix</title>
@@ -34,11 +34,7 @@
     .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
     .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
     .purple { background: linear-gradient(to right, #9C27B0, #6A1B9A); }
-    .red { background: linear-gradient(to right, #f44336, #c62828); }
-    .logout {
-      margin-top: 40px;
-      background: #444;
-    }
+    .logout { background: #444; margin-top: 40px; }
   </style>
 </head>
 <body>
@@ -71,7 +67,7 @@
 
     firebase.auth().onAuthStateChanged(user => {
       if (!user) {
-        window.location.href = "login.html";
+        window.location.href = "login.html"; // if not logged in
       }
     });
 
