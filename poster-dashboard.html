@@ -143,7 +143,7 @@ function submitPoster() {
 
   const upload = {
     name, shop, address:addr, category:cat, whatsapp:wa,
-    wallet: 100, userId:currentUser.uid
+    wallet: 0, userId:currentUser.uid
   };
   posterRef.set(upload).then(()=>location.reload());
 }
