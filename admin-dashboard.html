@@ -46,7 +46,7 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    const adminUID = "YOUR_ADMIN_UID_HERE"; // 🛑 Change this to your UID
+    const adminUID = "wjbEIAEF5jWgJKb2LlfWoIv4EqO2"; // ✅ Your admin UID
 
     firebase.auth().onAuthStateChanged(user => {
       if (!user || user.uid !== adminUID) {
