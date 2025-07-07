@@ -89,13 +89,24 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-const firebaseConfig = { /* same config */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+  authDomain: "zara-fix.firebaseapp.com",
+  databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+  projectId: "zara-fix",
+  storageBucket: "zara-fix.appspot.com",
+  messagingSenderId: "476473209200",
+  appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+};
 firebase.initializeApp(firebaseConfig);
 let currentUser, posterRef;
 
 firebase.auth().onAuthStateChanged(user => {
   currentUser = user;
-  if (!user) { document.getElementById("authSection").classList.remove("hidden"); return; }
+  if (!user) {
+    document.getElementById("authSection").classList.remove("hidden");
+    return;
+  }
   document.getElementById("authSection").classList.add("hidden");
   posterRef = firebase.database().ref("posters/" + user.uid);
   posterRef.once("value", snap => {
