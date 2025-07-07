@@ -1,31 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Login</title>
+  <title>ZaraFix</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: Arial; background: #e3f2fd; padding: 40px; text-align: center; }
-    input, button { padding: 12px; margin: 10px; border-radius: 10px; border: none; width: 80%; max-width: 300px; }
-    button { cursor: pointer; background: #1976D2; color: white; font-size: 16px; }
-    button:hover { background: #0d47a1; }
-    .google { background: #db4437; }
-  </style>
 </head>
 <body>
-  <h2>🔐 ZaraFix Login / Signup</h2>
-
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-
-  <button onclick="login()">🔓 Login</button>
-  <button onclick="signup()">📝 Signup</button><br>
-  <button class="google" onclick="googleLogin()">🔐 Login with Google</button>
-
-  <p id="msg" style="color:red;"></p>
+  <h2>Checking login status...</h2>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -41,31 +24,10 @@
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         window.location.href = "dashboard.html";
+      } else {
+        window.location.href = "login.html";
       }
     });
-
-    function login() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {}) // Redirect is handled by onAuthStateChanged
-        .catch(e => document.getElementById("msg").innerText = e.message);
-    }
-
-    function signup() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => {}) // Redirect is handled by onAuthStateChanged
-        .catch(e => document.getElementById("msg").innerText = e.message);
-    }
-
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .then(() => {}) // Redirect is handled by onAuthStateChanged
-        .catch(e => document.getElementById("msg").innerText = e.message);
-    }
   </script>
 </body>
 </html>
