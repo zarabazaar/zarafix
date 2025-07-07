@@ -6,47 +6,43 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #eef2f3;
-      margin: 0;
+      background: #f2f2f2;
       padding: 20px;
+      text-align: center;
     }
     h2 {
-      text-align: center;
       color: #333;
+      margin-bottom: 20px;
     }
     .btn3d {
-      display: block;
+      display: inline-block;
       width: 90%;
       max-width: 400px;
-      margin: 15px auto;
+      margin: 10px auto;
       padding: 15px;
       font-size: 18px;
       font-weight: bold;
       color: white;
-      background: linear-gradient(to right, #1976D2, #2196F3);
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
       border: none;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.3);
       cursor: pointer;
-      transition: transform 0.2s, background 0.2s;
+      transition: transform 0.2s;
     }
     .btn3d:hover {
       transform: scale(1.05);
     }
-
-    .section {
-      max-width: 700px;
-      margin: auto;
-      display: none;
-    }
     .card {
       background: white;
-      margin: 10px;
+      margin: 15px auto;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      text-align: left;
     }
-    .logout-btn {
+    .logout {
       position: fixed;
       top: 10px;
       right: 10px;
@@ -57,18 +53,20 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    .section {
+      display: none;
+      margin-top: 20px;
+    }
     .admin-info {
-      text-align: center;
-      font-weight: bold;
-      margin: 10px 0 30px;
       color: green;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
 <h2>🔐 ZaraFix Admin Dashboard</h2>
-<div class="admin-info" id="adminEmail">Checking admin login...</div>
+<div class="admin-info" id="adminEmail">Checking login...</div>
 
 <button class="btn3d" onclick="toggleSection('postersSection')">🛠️ Posters (Service Providers)</button>
 <div id="postersSection" class="section"></div>
@@ -76,12 +74,13 @@
 <button class="btn3d" onclick="toggleSection('requestsSection')">📦 User Service Requests</button>
 <div id="requestsSection" class="section"></div>
 
-<button class="logout-btn" onclick="logout()">🚪 Logout</button>
+<button class="logout" onclick="logout()">🚪 Logout</button>
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -94,15 +93,14 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-const adminEmail = "admin@gmail.com"; // 👈 Change to your real admin Gmail
+const adminEmail = "admin@gmail.com"; // replace with actual admin email
 
 firebase.auth().onAuthStateChanged(user => {
   if (!user || user.email !== adminEmail) {
-    alert("❌ Access denied. Only admin allowed.");
+    alert("❌ Access Denied: Only Admin Allowed");
     window.location.href = "index.html";
     return;
   }
-
   document.getElementById("adminEmail").innerText = "👤 " + user.email;
   loadPosters();
   loadRequests();
@@ -120,47 +118,45 @@ function toggleSection(id) {
 }
 
 function loadPosters() {
-  const container = document.getElementById("postersSection");
+  const postersDiv = document.getElementById("postersSection");
   firebase.database().ref("posters").once("value", snap => {
-    container.innerHTML = "";
+    postersDiv.innerHTML = "";
     snap.forEach(p => {
       const d = p.val();
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
         <b>${d.name}</b> (${d.shop})<br>
         📍 ${d.address}<br>
-        📱 WhatsApp: ${d.whatsapp}<br>
-        💼 Category: ${d.category}<br>
+        📱 ${d.whatsapp}<br>
+        💼 ${d.category}<br>
         💰 Wallet: ₹${d.wallet || 0}
       `;
-      container.appendChild(card);
+      postersDiv.appendChild(div);
     });
   });
 }
 
 function loadRequests() {
-  const container = document.getElementById("requestsSection");
+  const requestsDiv = document.getElementById("requestsSection");
   firebase.database().ref("requests").once("value", snap => {
-    container.innerHTML = "";
+    requestsDiv.innerHTML = "";
     snap.forEach(r => {
       const d = r.val();
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
         <b>${d.name}</b> - ${d.city}<br>
         🏠 ${d.address}, ${d.pincode}<br>
-        📱 WhatsApp: ${d.whatsapp}<br>
-        📦 Category: ${d.category}<br>
-        💬 Issue: ${d.issue}<br>
-        🕒 ${d.timestamp || "N/A"}<br>
+        📱 ${d.whatsapp}<br>
+        📦 ${d.category}<br>
+        💬 ${d.issue}<br>
         ✅ Accepted By: ${d.acceptedBy ? Object.keys(d.acceptedBy).length : 0}
       `;
-      container.appendChild(card);
+      requestsDiv.appendChild(div);
     });
   });
 }
 </script>
-
 </body>
 </html>
