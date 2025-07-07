@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZaraFix - Poster Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { background: #e3f2fd; font-family: Arial; padding: 20px; text-align: center; }
+    h2 { color: #333; }
+    .input-field {
+      width: 80%; max-width: 350px;
+      margin: 10px auto;
+      padding: 15px; border-radius: 12px;
+      border: 1px solid #ccc;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      font-size: 16px;
+    }
+    .btn3d {
+      padding: 12px 30px; margin-top: 15px;
+      font-size: 18px; font-weight: bold;
+      color: white; border: none;
+      border-radius: 18px;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+      cursor: pointer; transition: transform 0.3s ease;
+    }
+    .btn3d:hover { transform: scale(1.05); }
+    #msg { color: red; margin-top: 10px; }
+    #dashboard { display: none; margin-top: 20px; }
+    .card { background: white; margin: 10px auto; padding: 15px; max-width: 400px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1); border-radius: 12px; }
+  </style>
+</head>
+<body>
+
+  <h2>🧰 Service Provider Panel</h2>
+
+  <div id="registration">
+    <input class="input-field" id="name" placeholder="Your Name"><br>
+    <input class="input-field" id="shop" placeholder="Shop Name"><br>
+    <input class="input-field" id="address" placeholder="Address"><br>
+    <input class="input-field" id="whatsapp" placeholder="WhatsApp Number"><br>
+    <select class="input-field" id="category">
+      <option value="">Select Category</option>
+      <option value="AC Repair">AC Repair</option>
+      <option value="Mobile Repair">Mobile Repair</option>
+      <option value="Plumber">Plumber</option>
+      <option value="Electrician">Electrician</option>
+    </select><br>
+    <button class="btn3d" onclick="submitRegistration()">✅ Register</button>
+    <p id="msg"></p>
+  </div>
+
+  <div id="dashboard">
+    <h3>🎉 Welcome, <span id="posterName"></span></h3>
+    <div class="card" id="posterInfo"></div>
+    <button class="btn3d" style="background:#f44336" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) return window.location.href = "login.html";
+      const uid = user.uid;
+      firebase.database().ref("posters/" + uid).once("value", snapshot => {
+        if (snapshot.exists()) {
+          showDashboard(snapshot.val());
+        } else {
+          document.getElementById("registration").style.display = "block";
+        }
+      });
+    });
+
+    function submitRegistration() {
+      const name = document.getElementById("name").value.trim();
+      const shop = document.getElementById("shop").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const whatsapp = document.getElementById("whatsapp").value.trim();
+      const category = document.getElementById("category").value;
+      if (!name || !shop || !address || !whatsapp || !category) {
+        return document.getElementById("msg").innerText = "⚠️ Fill all fields.";
+      }
+
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      const uid = user.uid;
+      const email = user.email;
+
+      firebase.database().ref("posters/" + uid).set({
+        name, shop, address, whatsapp, category, email
+      }).then(() => {
+        showDashboard({ name, shop, address, whatsapp, category, email });
+      });
+    }
+
+    function showDashboard(data) {
+      document.getElementById("registration").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("posterName").innerText = data.name || "Poster";
+      document.getElementById("posterInfo").innerHTML = `
+        📍 Address: ${data.address}<br>
+        🛒 Shop: ${data.shop}<br>
+        📞 WhatsApp: ${data.whatsapp}<br>
+        🛠️ Category: ${data.category}<br>
+        ✉️ Email: ${data.email}
+      `;
+    }
+
+    function logout() {
+      firebase.auth().signOut().then(() => window.location.href = "login.html");
+    }
+  </script>
+</body>
+</html>
