@@ -1,7 +1,8 @@
+<!-- register.html -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Login</title>
+  <title>ZaraFix - Register/Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial; background: #e3f2fd; padding: 40px; text-align: center; }
@@ -9,19 +10,24 @@
     button { cursor: pointer; background: #1976D2; color: white; font-size: 16px; }
     button:hover { background: #0d47a1; }
     .google { background: #db4437; }
+    #msg { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
   <h2>🔐 ZaraFix Login / Signup</h2>
+
   <input type="email" id="email" placeholder="Email"><br>
   <input type="password" id="password" placeholder="Password"><br>
+
   <button onclick="login()">🔓 Login</button>
   <button onclick="signup()">📝 Signup</button><br>
-  <button class="google" onclick="googleLogin()">🔐 Login with Google</button>
-  <p id="msg" style="color:red;"></p>
+  <button class="google" onclick="googleLogin()">🔐 Continue with Google</button>
+
+  <p id="msg"></p>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -33,6 +39,10 @@
       appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
     };
     firebase.initializeApp(firebaseConfig);
+
+    window.onload = () => {
+      firebase.auth().signOut(); // Force logout every time
+    };
 
     function login() {
       const email = document.getElementById("email").value;
