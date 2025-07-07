@@ -3,7 +3,12 @@
 <head>
   <title>ZaraFix - Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Style Sheet Link -->
+  <link rel="stylesheet" href="style.css">
+
   <style>
+    /* fallback styles in case style.css fails */
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
@@ -50,10 +55,12 @@
 
 <div class="user-info" id="userInfo">Checking login...</div>
 
-<a href="#" class="btn" onclick="checkLoginAndGo('service-request.html')">📋 Service Request</a>
-<a href="#" class="btn" onclick="checkLoginAndGo('poster-dashboard.html')">🧰 Poster Dashboard</a>
-<a href="#" class="btn" onclick="checkLoginAndGo('wallet-recharge.html')">💳 Wallet Recharge</a>
-<a href="#" class="btn" onclick="checkLoginAndGo('admin.html')">📊 Admin Panel</a>
+<!-- Buttons for navigation -->
+<a href="service-request.html" class="btn">📋 Service Request</a>
+<a href="poster-dashboard.html" class="btn">🧰 Poster Dashboard</a>
+
+<!-- Optional: If you want a page for style.css preview -->
+<a href="style.css" class="btn" target="_blank">🎨 View style.css</a>
 
 <br><br>
 <button class="btn" style="background:#e53935" onclick="logout()">🚪 Logout</button>
@@ -84,18 +91,9 @@
       document.getElementById("userInfo").innerHTML =
         `👤 <b>${user.displayName || 'User'}</b><br>📧 ${user.email}`;
     } else {
-      window.location.href = "index.html"; // not logged in, go to login page
+      window.location.href = "index.html"; // not logged in, go to login
     }
   });
-
-  function checkLoginAndGo(page) {
-    if (currentUser) {
-      window.location.href = page;
-    } else {
-      document.getElementById("message").innerText = "❌ Please login first.";
-      setTimeout(() => window.location.href = "index.html", 1000);
-    }
-  }
 
   function logout() {
     firebase.auth().signOut().then(() => {
