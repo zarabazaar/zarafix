@@ -6,27 +6,27 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f1f1f1;
+      background: #f9f9f9;
       margin: 0;
       padding: 30px;
       text-align: center;
     }
 
     h2 {
-      color: #333;
+      color: #222;
       margin-bottom: 30px;
     }
 
     .btn3d {
       display: inline-block;
-      margin: 20px;
-      padding: 20px 30px;
+      margin: 15px;
+      padding: 20px 40px;
       font-size: 18px;
       color: white;
       background: linear-gradient(to right, #2196F3, #21CBF3);
       border: none;
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       text-decoration: none;
       transition: transform 0.2s ease;
     }
@@ -37,55 +37,55 @@
 
     #userInfo {
       font-size: 16px;
-      color: #444;
       margin-bottom: 30px;
+      color: #444;
     }
   </style>
 </head>
 <body>
 
-<h2>🔐 ZaraFix Admin Dashboard</h2>
+  <h2>🔐 ZaraFix Admin Dashboard</h2>
+  <div id="userInfo">Checking login...</div>
 
-<div id="userInfo">Checking login...</div>
+  <!-- Working 3D Buttons -->
+  <a class="btn3d" href="admin-posters.html">🛠️ Posters (Service Providers)</a>
+  <a class="btn3d" href="admin-requests.html">📦 User Service Requests</a>
 
-<!-- Working 3D Link Buttons -->
-<a href="admin-posters.html" class="btn3d">🛠️ Posters (Service Providers)</a>
-<a href="admin-requests.html" class="btn3d">📦 User Service Requests</a>
+  <br><br>
+  <button class="btn3d" style="background: #e53935" onclick="logout()">🚪 Logout</button>
 
-<br><br>
-<button class="btn3d" style="background:#e53935" onclick="logout()">🚪 Logout</button>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-<!-- Firebase Auth -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-    authDomain: "zara-fix.firebaseapp.com",
-    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-    projectId: "zara-fix",
-    storageBucket: "zara-fix.appspot.com",
-    messagingSenderId: "476473209200",
-    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById("userInfo").innerHTML =
-        `👤 <b>${user.displayName || 'Admin'}</b><br>📧 ${user.email}`;
-    } else {
-      window.location.href = "index.html"; // not logged in
-    }
-  });
-
-  function logout() {
-    firebase.auth().signOut().then(() => {
-      window.location.href = "index.html";
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("userInfo").innerHTML = `
+          👤 <b>${user.displayName || 'Admin'}</b><br>📧 ${user.email}
+        `;
+      } else {
+        window.location.href = "index.html";
+      }
     });
-  }
-</script>
+
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
 
 </body>
 </html>
