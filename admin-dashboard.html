@@ -57,7 +57,6 @@
     import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // ✅ Your actual Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA0xVTGpxrxbPTK0gFbmbDZSW5wXlQjb",
       authDomain: "zarafix.firebaseapp.com",
@@ -72,7 +71,7 @@
     const db = getDatabase();
     const auth = getAuth();
 
-    // 🔐 Admin login check
+    // 🔐 Admin Login Check
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         console.warn("❌ User not logged in. Redirecting...");
@@ -99,7 +98,7 @@
       });
     });
 
-    // 📦 Load posters
+    // 🧾 Load Posters
     function loadPosters() {
       const postersDiv = document.getElementById("posterList");
       get(ref(db, "posters")).then(snapshot => {
@@ -117,10 +116,10 @@
             </div>
           `;
         });
-      });
+      }).catch(err => console.error("❌ Error loading posters:", err));
     }
 
-    // 📦 Load user requests
+    // 📋 Load User Requests
     function loadRequests() {
       const requestsDiv = document.getElementById("requestList");
       get(ref(db, "requests")).then(snapshot => {
@@ -141,20 +140,22 @@
             `;
           });
         });
-      });
+      }).catch(err => console.error("❌ Error loading requests:", err));
     }
 
-    // 💰 Recharge function
+    // 💸 Recharge Poster Wallet
     window.recharge = function(uid) {
       const walletRef = ref(db, "posters/" + uid + "/wallet");
       get(walletRef).then(snap => {
         const current = snap.val() || 0;
-        update(ref(db, "posters/" + uid), { wallet: current + 100 }).then(() => {
-          alert("₹100 added.");
-          loadPosters(); // Reload after recharge
-        }).catch(err => {
-          console.error("❌ Recharge failed:", err);
-        });
+        update(ref(db, "posters/" + uid), { wallet: current + 100 })
+          .then(() => {
+            alert("✅ ₹100 added to wallet.");
+            loadPosters();
+          })
+          .catch(err => {
+            console.error("❌ Recharge failed:", err);
+          });
       });
     };
   </script>
