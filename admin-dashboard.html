@@ -6,40 +6,30 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 30px;
+      background: #f0f8ff;
       text-align: center;
+      padding: 30px;
     }
+    h2 { color: #333; margin-bottom: 30px; }
 
-    h2 {
-      color: #222;
-      margin-bottom: 30px;
-    }
-
-    .btn3d {
+    .btn {
       display: inline-block;
       margin: 15px;
-      padding: 20px 40px;
+      padding: 18px 32px;
       font-size: 18px;
       color: white;
-      background: linear-gradient(to right, #2196F3, #21CBF3);
       border: none;
       border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(to right, #2196F3, #0D47A1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
       text-decoration: none;
-      transition: transform 0.2s ease;
+      transition: transform 0.3s;
     }
+    .btn:hover { transform: scale(1.05); }
 
-    .btn3d:hover {
-      transform: scale(1.05);
-    }
+    #userInfo { margin-top: 20px; font-size: 16px; color: #444; }
 
-    #userInfo {
-      font-size: 16px;
-      margin-bottom: 30px;
-      color: #444;
-    }
+    .logout { background: #e53935; }
   </style>
 </head>
 <body>
@@ -47,13 +37,14 @@
   <h2>🔐 ZaraFix Admin Dashboard</h2>
   <div id="userInfo">Checking login...</div>
 
-  <a class="btn3d" href="admin-posters.html">🛠️ Posters (Service Providers)</a>
-  <a class="btn3d" href="admin-requests.html">📦 User Service Requests</a>
+  <div id="adminButtons" style="display:none;">
+    <a class="btn" href="admin-posters.html">🛠️ Posters (Service Providers)</a>
+    <a class="btn" href="admin-requests.html">📦 User Service Requests</a>
+    <br><br>
+    <button class="btn logout" onclick="logout()">🚪 Logout</button>
+  </div>
 
-  <br><br>
-  <button class="btn3d" style="background: #e53935" onclick="logout()">🚪 Logout</button>
-
-  <!-- Firebase Auth -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -72,22 +63,23 @@
 
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        const uid = user.uid;
-        firebase.database().ref("users/" + uid).once("value").then(snapshot => {
-          const userData = snapshot.val();
-          if (userData && userData.isAdmin === true) {
-            document.getElementById("userInfo").innerHTML = `
-              👤 <b>${user.displayName || 'Admin'}</b><br>📧 ${user.email}
-            `;
-          } else {
-            alert("⛔ Access Denied: You are not an admin.");
-            window.location.href = "welcome.html";
-          }
-        });
+        document.getElementById("userInfo").innerHTML = `👤 ${user.email}`;
+        checkIfAdmin(user.uid);
       } else {
         window.location.href = "login.html";
       }
     });
+
+    function checkIfAdmin(uid) {
+      firebase.database().ref("users/" + uid + "/isAdmin").once("value", snapshot => {
+        if (snapshot.exists() && snapshot.val() === true) {
+          document.getElementById("adminButtons").style.display = "block";
+        } else {
+          alert("❌ Access Denied: Not an Admin.");
+          window.location.href = "welcome.html";
+        }
+      });
+    }
 
     function logout() {
       firebase.auth().signOut().then(() => {
