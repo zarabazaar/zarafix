@@ -87,5 +87,22 @@
       });
     }
   </script>
+
+<script>
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    const userId = user.uid;
+    const email = user.email;
+
+    firebase.database().ref("users/" + userId).update({
+      email: email
+    });
+  }
+});
+</script>
+
+
+
+  
 </body>
 </html>
