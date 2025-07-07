@@ -1,68 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Admin Dashboard</title>
+  <title>ZaraFix - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      margin: 0; padding: 20px;
-    }
-    h2 { text-align: center; color: #333; }
-
-    .section {
-      margin: 30px auto;
-      max-width: 700px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .card h3 { margin: 0 0 10px; }
-
-    .btn {
-      margin-top: 10px;
-      padding: 10px 20px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .btn:hover { background: #1976D2; }
-
-    .section-title {
-      font-size: 20px;
-      color: #444;
-      border-bottom: 2px solid #2196F3;
-      padding-bottom: 5px;
-      margin-bottom: 15px;
-    }
+    body { font-family: Arial; background: #e3f2fd; padding: 40px; text-align: center; }
+    input, button { padding: 12px; margin: 10px; border-radius: 10px; border: none; width: 80%; max-width: 300px; }
+    button { cursor: pointer; background: #1976D2; color: white; font-size: 16px; }
+    button:hover { background: #0d47a1; }
+    .google { background: #db4437; }
   </style>
 </head>
 <body>
+  <h2>🔐 ZaraFix Login / Signup</h2>
 
-  <h2>🔐 ZaraFix Admin Dashboard</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
 
-  <div class="section">
-    <div class="section-title">🛠️ Posters (Service Providers)</div>
-    <div id="posters"></div>
-  </div>
+  <button onclick="login()">🔓 Login</button>
+  <button onclick="signup()">📝 Signup</button><br>
+  <button class="google" onclick="googleLogin()">🔐 Login with Google</button>
 
-  <div class="section">
-    <div class="section-title">📦 User Service Requests</div>
-    <div id="requests"></div>
-  </div>
+  <p id="msg" style="color:red;"></p>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -76,42 +38,28 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // Load Posters
-    firebase.database().ref("posters").once("value", snapshot => {
-      const postersDiv = document.getElementById("posters");
-      snapshot.forEach(child => {
-        const p = child.val();
-        const uid = child.key;
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h3>${p.name} (${p.category})</h3>
-          🏪 ${p.shop}<br>
-          📍 ${p.address}<br>
-          📱 ${p.whatsapp}<br>
-          💰 Wallet: ₹<span id="wallet-${uid}">${p.wallet || 0}</span><br>
-          <button class="btn" onclick="recharge('${uid}')">➕ Recharge ₹100</button>
-        `;
-        postersDiv.appendChild(card);
-      });
-    });
+    function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "dashboard.html")
+        .catch(e => document.getElementById("msg").innerText = e.message);
+    }
 
-    // Load Requests
-    firebase.database().ref("requests").once("value", snapshot => {
-      const reqDiv = document.getElementById("requests");
-      snapshot.forEach(child => {
-        const r = child.val();
-        let accepted = "";
-        if (r.acceptedBy) {
-          accepted = Object.keys(r.acceptedBy).map(uid => `<li>${uid}</li>`).join("");
-        } else {
-          accepted = "<i>No one accepted</i>";
-        }
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h3>${r.name} (${r.category})</h3>
-          🏠 ${r.address}, ${r.city}, ${r.pincode}<br>
-          💬 ${r.issue}<br>
-          📱 ${r.whatsapp}<br>
-          ✅ Accepted By:<ul>${a
+    function signup() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      firebase.auth().createUserWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "dashboard.html")
+        .catch(e => document.getElementById("msg").innerText = e.message);
+    }
+
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .then(() => window.location.href = "dashboard.html")
+        .catch(e => document.getElementById("msg").innerText = e.message);
+    }
+  </script>
+</body>
+</html>
