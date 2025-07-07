@@ -1,166 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Welcome/Login</title>
+  <title>ZaraFix - Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
+      margin: 0;
       padding: 30px;
       text-align: center;
     }
-    .card {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    h2 {
+      color: #333;
+      margin-bottom: 30px;
     }
-    input {
-      padding: 10px;
-      margin: 10px 0;
-      width: 90%;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button, .btn {
-      padding: 12px 25px;
-      margin: 10px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
+    .btn {
+      display: inline-block;
+      margin: 15px;
+      padding: 18px 30px;
       background: linear-gradient(to right, #4CAF50, #2E7D32);
       color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.3s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      transform: scale(1.08);
+    }
+    #message {
+      margin-top: 25px;
+      color: red;
       font-size: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
-    button:hover, .btn:hover {
-      transform: scale(1.05);
-    }
-    .logout-btn {
-      background: #e53935;
-    }
-    .toggle-link {
-      color: #007BFF; cursor: pointer;
-      text-decoration: underline;
-      font-size: 14px;
-    }
-    #dashboard, #userInfo {
-      margin-top: 20px;
+    .user-info {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: #444;
     }
   </style>
 </head>
 <body>
 
-  <!-- LOGIN CARD -->
-  <div class="card" id="loginCard">
-    <h2 id="formTitle">🔐 Login to ZaraFix</h2>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+<h2>⚙️ Welcome to ZaraFix</h2>
 
-    <div id="loginSection">
-      <button onclick="emailLogin()">Login with Email</button><br>
-      <button onclick="googleLogin()">Login with Google</button><br>
-      <p>Don't have an account? <span class="toggle-link" onclick="toggleForm()">Register here</span></p>
-    </div>
+<div class="user-info" id="userInfo">Checking login...</div>
 
-    <div id="registerSection" style="display:none;">
-      <button onclick="emailRegister()">Register with Email</button><br>
-      <p>Already have an account? <span class="toggle-link" onclick="toggleForm()">Login here</span></p>
-    </div>
-  </div>
+<a href="#" class="btn" onclick="checkLoginAndGo('service-request.html')">📋 Service Request</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('poster-dashboard.html')">🧰 Poster Dashboard</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('wallet-recharge.html')">💳 Wallet Recharge</a>
+<a href="#" class="btn" onclick="checkLoginAndGo('admin.html')">📊 Admin Panel</a>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" style="display:none;">
-    <h2>🎉 Welcome to ZaraFix</h2>
-    <div id="userInfo"></div>
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button><br><br>
+<br><br>
+<button class="btn" style="background:#e53935" onclick="logout()">🚪 Logout</button>
 
-    <a href="#" class="btn">📋 Post Request</a>
-    <a href="#" class="btn">🧰 Poster Dashboard</a>
-    <a href="#" class="btn">💳 Wallet Recharge</a>
-    <a href="#" class="btn">📊 Admin Panel</a>
-  </div>
+<p id="message"></p>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    // 🔁 Check Login State
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        showDashboard(user);
-      } else {
-        document.getElementById("loginCard").style.display = "block";
-        document.getElementById("dashboard").style.display = "none";
-      }
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  let currentUser = null;
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      document.getElementById("userInfo").innerHTML =
+        `👤 <b>${user.displayName || 'User'}</b><br>📧 ${user.email}`;
+    } else {
+      window.location.href = "index.html"; // not logged in, go to login page
+    }
+  });
+
+  function checkLoginAndGo(page) {
+    if (currentUser) {
+      window.location.href = page;
+    } else {
+      document.getElementById("message").innerText = "❌ Please login first.";
+      setTimeout(() => window.location.href = "index.html", 1000);
+    }
+  }
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      window.location.href = "index.html";
     });
-
-    function emailLogin() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(res => showDashboard(res.user))
-        .catch(err => alert("❌ " + err.message));
-    }
-
-    function emailRegister() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(res => showDashboard(res.user))
-        .catch(err => alert("❌ " + err.message));
-    }
-
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .then(res => showDashboard(res.user))
-        .catch(err => alert("❌ " + err.message));
-    }
-
-    function logout() {
-      firebase.auth().signOut().then(() => location.reload());
-    }
-
-    function showDashboard(user) {
-      document.getElementById("loginCard").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("userInfo").innerHTML = `
-        👤 <b>${user.displayName || "User"}</b><br>
-        📧 ${user.email}
-      `;
-    }
-
-    function toggleForm() {
-      const loginSection = document.getElementById("loginSection");
-      const registerSection = document.getElementById("registerSection");
-      const title = document.getElementById("formTitle");
-      if (loginSection.style.display === "none") {
-        loginSection.style.display = "block";
-        registerSection.style.display = "none";
-        title.innerText = "🔐 Login to ZaraFix";
-      } else {
-        loginSection.style.display = "none";
-        registerSection.style.display = "block";
-        title.innerText = "📝 Register on ZaraFix";
-      }
-    }
-  </script>
+  }
+</script>
 
 </body>
 </html>
