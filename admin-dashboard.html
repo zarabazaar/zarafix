@@ -1,135 +1,134 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🛠️ ZaraFix Admin - Posters</title>
+  <title>🛠️ ZaraFix Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
-    h2 { text-align: center; }
+    body { font-family: sans-serif; margin: 0; background: #f4f4f4; padding: 20px; }
+    h1 { text-align: center; }
+    .section { margin-bottom: 40px; }
     .card {
-      background: white; padding: 15px; margin: 15px auto;
-      border-radius: 10px; max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      padding: 16px;
+      margin: 10px;
+      transition: transform 0.2s ease;
     }
-    .btn {
-      margin: 5px 5px 0 0; padding: 8px 16px;
-      border: none; border-radius: 6px;
-      color: white; font-size: 14px; cursor: pointer;
+    .card:hover { transform: scale(1.05); }
+    .grid { display: flex; flex-wrap: wrap; justify-content: center; }
+    button {
+      padding: 8px 12px;
+      border: none;
+      background: #2ecc71;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
     }
-    .approve { background: #4CAF50; }
-    .reject { background: #f44336; }
-    .delete { background: #9e9e9e; }
-    .recharge { background: #1976D2; }
-    .approved { color: green; font-weight: bold; }
-    .rejected { color: red; font-weight: bold; }
+    button:hover { background: #27ae60; }
   </style>
 </head>
 <body>
+  <h1>👑 ZaraFix Admin Dashboard</h1>
 
-  <h2>🛠️ All Posters (Service Providers)</h2>
-  <div id="posters"></div>
+  <div class="section">
+    <h2>🧑‍🔧 All Service Providers (Posters)</h2>
+    <div id="posterList" class="grid"></div>
+  </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <div class="section">
+    <h2>📋 All User Requests</h2>
+    <div id="userRequests" class="grid"></div>
+  </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get, update, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
     const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+      apiKey: "AIzaSyA0xVTGpxrxbPTK0gFbmbDZSW5wXlQjb",
+      authDomain: "your-project.firebaseapp.com",
+      databaseURL: "https://your-project.firebaseio.com",
+      projectId: "your-project",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
     };
-    firebase.initializeApp(firebaseConfig);
 
-    const adminUID = "wjbEIAEF5jWgJKb2LlfWoIv4EqO2"; // ✅ Your admin UID
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase();
+    const auth = getAuth();
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user || user.uid !== adminUID) {
-        alert("Access denied. Admins only.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      const postersDiv = document.getElementById("posters");
-
-      firebase.database().ref("posters").once("value", snapshot => {
-        snapshot.forEach(child => {
-          const uid = child.key;
-          const data = child.val();
-
-          // Auto-fill missing values
-          const name = data.name || "No Name";
-          const shop = data.shop || "No Shop";
-          const address = data.address || "No Address";
-          const whatsapp = data.whatsapp || "Not Provided";
-          const category = data.category || "Unknown";
-          const email = data.email || "No Email";
-          const wallet = data.wallet || 0;
-          const approved = data.approved;
-
-          // Save back filled values
-          const updatedData = { name, shop, address, whatsapp, category, email, wallet };
-          firebase.database().ref("posters/" + uid).update(updatedData);
-
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-            <b>${name}</b> (${category})<br>
-            🛒 Shop: ${shop}<br>
-            📍 Address: ${address}<br>
-            📱 WhatsApp: ${whatsapp}<br>
-            ✉️ Email: ${email}<br>
-            💰 Wallet: ₹${wallet}<br>
-            Status: <span id="status-${uid}">${approved === true ? "✅ Approved" : (approved === false ? "❌ Rejected" : "⏳ Pending")}</span><br>
-            <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
-            <button class="btn reject" onclick="rejectPoster('${uid}')">❌ Reject</button>
-            <button class="btn delete" onclick="deletePoster('${uid}')">🗑 Delete</button>
-            <button class="btn recharge" onclick="rechargeWallet('${uid}')">💰 +₹100</button>
-          `;
-          postersDiv.appendChild(card);
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        get(ref(db, "users/" + user.uid)).then(snap => {
+          if (snap.exists() && snap.val().isAdmin === true) {
+            loadPosters();
+            loadRequests();
+          } else {
+            alert("Access denied. Admins only.");
+            window.location.href = "index.html";
+          }
         });
-      });
+      } else {
+        window.location.href = "index.html";
+      }
     });
 
-    function approvePoster(uid) {
-      firebase.database().ref("posters/" + uid + "/approved").set(true).then(() => {
-        document.getElementById("status-" + uid).innerText = "✅ Approved";
-        alert("✅ Approved");
+    function loadPosters() {
+      const postersDiv = document.getElementById("posterList");
+      get(ref(db, "posters")).then(snapshot => {
+        postersDiv.innerHTML = "";
+        snapshot.forEach(child => {
+          const data = child.val();
+          const html = `
+            <div class="card">
+              <strong>${data.name}</strong><br>
+              📍 ${data.address}<br>
+              🛠️ ${data.category}<br>
+              💰 Wallet: ₹${data.wallet || 0}<br>
+              📞 <a href="https://wa.me/${data.whatsapp}" target="_blank">${data.whatsapp}</a><br><br>
+              <button onclick="recharge('${child.key}')">Recharge ₹100</button>
+            </div>
+          `;
+          postersDiv.innerHTML += html;
+        });
       });
     }
 
-    function rejectPoster(uid) {
-      firebase.database().ref("posters/" + uid + "/approved").set(false).then(() => {
-        document.getElementById("status-" + uid).innerText = "❌ Rejected";
-        alert("❌ Rejected");
+    function loadRequests() {
+      const requestsDiv = document.getElementById("userRequests");
+      get(ref(db, "requests")).then(snapshot => {
+        requestsDiv.innerHTML = "";
+        snapshot.forEach(userSnap => {
+          userSnap.forEach(reqSnap => {
+            const data = reqSnap.val();
+            const acceptedBy = data.acceptedBy || {};
+            const acceptedNames = Object.values(acceptedBy).map(a => a.name).join(", ") || "None";
+            const html = `
+              <div class="card">
+                <strong>Issue:</strong> ${data.issue}<br>
+                📍 ${data.address}, ${data.pincode}<br>
+                🧑‍💻 Accepted By: ${acceptedNames}<br>
+                📞 <a href="https://wa.me/${data.whatsapp}" target="_blank">${data.whatsapp}</a>
+              </div>
+            `;
+            requestsDiv.innerHTML += html;
+          });
+        });
       });
     }
 
-    function deletePoster(uid) {
-      if (confirm("Are you sure you want to delete this poster?")) {
-        firebase.database().ref("posters/" + uid).remove().then(() => {
-          alert("🗑 Deleted");
-          location.reload();
-        });
-      }
-    }
-
-    function rechargeWallet(uid) {
-      const walletRef = firebase.database().ref("posters/" + uid + "/wallet");
-      walletRef.once("value", snap => {
-        const current = snap.val() || 0;
-        walletRef.set(current + 100).then(() => {
-          alert("💰 Wallet recharged ₹100");
-          location.reload();
-        });
+    window.recharge = function(uid) {
+      const walletRef = ref(db, `posters/${uid}/wallet`);
+      get(walletRef).then(snapshot => {
+        const current = snapshot.val() || 0;
+        update(ref(db, `posters/${uid}`), { wallet: current + 100 });
+        alert("₹100 added to wallet.");
+        loadPosters();
       });
     }
   </script>
-
 </body>
 </html>
