@@ -1,61 +1,44 @@
-<!-- welcome.html -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Welcome - ZaraFix</title>
+  <title>ZaraFix - Register/Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      background: #e3f2fd;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
-    h2 {
-      font-size: 28px;
-      color: #333;
-    }
-    .btn {
-      display: inline-block;
-      margin: 20px;
-      padding: 20px 35px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #fff;
+    body { font-family: Arial; background: #e3f2fd; padding: 40px; text-align: center; }
+    input, button {
+      padding: 12px;
+      margin: 10px;
+      border-radius: 10px;
       border: none;
-      border-radius: 18px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
       cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.3s;
+      background: #1976D2;
+      color: white;
+      font-size: 16px;
     }
-    .btn:hover {
-      transform: scale(1.08);
-    }
-    .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
-    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
-    .purple { background: linear-gradient(to right, #9C27B0, #6A1B9A); }
-    .orange { background: linear-gradient(to right, #FF9800, #EF6C00); }
-    .logout {
-      margin-top: 40px;
-      background: #444;
-    }
+    button:hover { background: #0d47a1; }
+    .google { background: #db4437; }
+    #msg { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
+  <h2>🔐 ZaraFix Login / Signup</h2>
 
-  <h2>👋 Welcome to <b>ZaraFix</b></h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
 
-  <div id="buttons">
-    <a class="btn green" href="service-request.html">📋 Service Request</a>
-    <a class="btn blue" href="poster-dashboard.html">🧰 Poster Dashboard</a>
-    <a class="btn purple" href="admin.html">🛠️ Admin Dashboard</a>
-  </div>
+  <button onclick="login()">🔓 Login</button>
+  <button onclick="signup()">📝 Signup</button><br>
+  <button class="google" onclick="googleLogin()">🔐 Google Login</button>
 
-  <button class="btn logout" onclick="logout()">🚪 Logout</button>
+  <p id="msg"></p>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -68,18 +51,50 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "register.html"; // redirect if not logged in
-      }
-    });
+    function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
 
-    function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "register.html";
-      });
+      if (!email || !pass) {
+        document.getElementById("msg").innerText = "Please fill all fields.";
+        return;
+      }
+
+      firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => {
+          window.location.href = "welcome.html";
+        })
+        .catch(e => {
+          document.getElementById("msg").innerText = e.message;
+        });
+    }
+
+    function signup() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+
+      if (!email || !pass) {
+        document.getElementById("msg").innerText = "Please fill all fields.";
+        return;
+      }
+
+      firebase.auth().createUserWithEmailAndPassword(email, pass)
+        .then(() => {
+          window.location.href = "welcome.html";
+        })
+        .catch(e => {
+          document.getElementById("msg").innerText = e.message;
+        });
+    }
+
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .then(() => window.location.href = "welcome.html")
+        .catch(e => {
+          document.getElementById("msg").innerText = e.message;
+        });
     }
   </script>
-
 </body>
 </html>
