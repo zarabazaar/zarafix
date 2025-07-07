@@ -11,32 +11,34 @@
       padding: 30px;
       text-align: center;
     }
+
     h2 {
       color: #333;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
+
     .btn3d {
       display: inline-block;
-      margin: 15px;
+      margin: 20px;
       padding: 20px 30px;
-      background: linear-gradient(to right, #2196F3, #21CBF3);
+      font-size: 18px;
       color: white;
-      font-size: 20px;
+      background: linear-gradient(to right, #2196F3, #21CBF3);
       border: none;
       border-radius: 20px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
       text-decoration: none;
+      transition: transform 0.2s ease;
     }
+
     .btn3d:hover {
       transform: scale(1.05);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
+
     #userInfo {
-      margin-bottom: 30px;
       font-size: 16px;
       color: #444;
+      margin-bottom: 30px;
     }
   </style>
 </head>
@@ -46,14 +48,14 @@
 
 <div id="userInfo">Checking login...</div>
 
-<!-- 3D Buttons with Links -->
+<!-- Working 3D Link Buttons -->
 <a href="admin-posters.html" class="btn3d">🛠️ Posters (Service Providers)</a>
 <a href="admin-requests.html" class="btn3d">📦 User Service Requests</a>
 
 <br><br>
 <button class="btn3d" style="background:#e53935" onclick="logout()">🚪 Logout</button>
 
-<!-- Firebase Scripts -->
+<!-- Firebase Auth -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
@@ -69,15 +71,12 @@
   };
   firebase.initializeApp(firebaseConfig);
 
-  let currentUser = null;
-
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
-      currentUser = user;
       document.getElementById("userInfo").innerHTML =
         `👤 <b>${user.displayName || 'Admin'}</b><br>📧 ${user.email}`;
     } else {
-      window.location.href = "index.html"; // Not logged in
+      window.location.href = "index.html"; // not logged in
     }
   });
 
