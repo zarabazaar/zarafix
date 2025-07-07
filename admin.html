@@ -1,41 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Admin Dashboard</title>
+  <title>ZaraFix Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background: #eef2f3; margin:0; padding:20px; }
-    h2 { text-align:center; }
+    body {
+      font-family: Arial, sans-serif; background: #f0f0f0;
+      margin: 0; padding: 20px;
+    }
+    h2 {
+      text-align: center; color: #333;
+    }
+    .section {
+      background: #fff; padding: 15px;
+      margin: 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 800px;
+    }
     .card {
-      background:white; margin:15px auto; padding:15px;
-      border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      max-width:700px;
+      background: #f9f9f9;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-    .card h3 { margin:0 0 10px; }
+    .wallet {
+      font-weight: bold;
+      color: green;
+    }
     .btn {
-      padding:8px 16px; background:#2196F3; color:white;
-      border:none; border-radius:8px; cursor:pointer;
-      margin-top:10px;
+      background: #2196F3;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
     }
-    .btn:hover { background:#0d8ddb; }
-    .section-title {
-      font-size:20px; color:#333; border-bottom:2px solid #2196F3; padding-bottom:5px;
-      margin-top:30px;
+    .btn:hover {
+      background: #1976D2;
+    }
+    .logout-btn {
+      background: #d32f2f;
+      float: right;
+      margin-top: -40px;
+    }
+    .admin-email {
+      font-size: 14px;
+      color: gray;
+      text-align: right;
+      margin-top: -15px;
     }
   </style>
 </head>
 <body>
-  <h2>🔐 ZaraFix - Admin Dashboard</h2>
+  <h2>🔐 ZaraFix Admin Dashboard</h2>
+  <div class="admin-email" id="adminEmail"></div>
+  <button class="btn logout-btn" onclick="logout()">Logout</button>
 
-  <div id="postersSection">
-    <div class="section-title">🛠️ Posters (Service Providers)</div>
+  <div class="section" id="postersSection">
+    <h3>🛠️ Service Providers (Posters)</h3>
+    <div id="posterList">Loading...</div>
   </div>
 
-  <div id="requestsSection">
-    <div class="section-title">📦 Service Requests</div>
+  <div class="section" id="requestsSection">
+    <h3>📦 User Service Requests</h3>
+    <div id="requestList">Loading...</div>
   </div>
 
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
@@ -50,67 +85,67 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    const postersRef = firebase.database().ref("posters");
-    const requestsRef = firebase.database().ref("requests");
+    const adminEmail = "admin@example.com"; // 👈 Replace with your real admin email
+    let currentUser;
 
-    // Load Posters
-    postersRef.once("value", snap => {
-      const posters = snap.val();
-      for (let uid in posters) {
-        const p = posters[uid];
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <h3>👨‍🔧 ${p.name} (${p.category})</h3>
-          🏪 ${p.shop}<br>
-          📍 ${p.address}<br>
-          📱 ${p.whatsapp}<br>
-          💰 Wallet: ₹<b id="wallet-${uid}">${p.wallet || 0}</b><br>
-          <button class="btn" onclick="recharge('${uid}')">➕ Recharge ₹100</button>
-        `;
-        document.getElementById("postersSection").appendChild(div);
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user || user.email !== adminEmail) {
+        alert("Admin access only.");
+        return window.location.href = "index.html";
       }
+
+      currentUser = user;
+      document.getElementById("adminEmail").textContent = "👤 " + user.email;
+      loadPosters();
+      loadRequests();
     });
 
-    // Load Requests and Accepted Posters
-    requestsRef.once("value", snap => {
-      const all = snap.val();
-      for (let key in all) {
-        const r = all[key];
-        const div = document.createElement("div");
-        div.className = "card";
-        let acceptedList = "";
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
 
-        if (r.acceptedBy) {
-          for (let posterId in r.acceptedBy) {
-            acceptedList += `<li>${posterId}</li>`;
-          }
-        } else {
-          acceptedList = "<i>No one accepted yet</i>";
-        }
+    function loadPosters() {
+      const ref = firebase.database().ref("posters");
+      ref.once("value", snap => {
+        const list = document.getElementById("posterList");
+        list.innerHTML = "";
+        snap.forEach(child => {
+          const d = child.val();
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <b>${d.name}</b> (${d.category})<br>
+            🏪 ${d.shop}<br>
+            📍 ${d.address}<br>
+            📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a><br>
+            💰 <span class="wallet">₹${d.wallet || 0}</span><br>
+          `;
+          list.appendChild(el);
+        });
+      });
+    }
 
-        div.innerHTML = `
-          <h3>📨 ${r.name} - ${r.category}</h3>
-          📞 WhatsApp: ${r.whatsapp}<br>
-          🏠 ${r.address}, ${r.city}, ${r.pincode}<br>
-          🔧 Issue: ${r.issue}<br>
-          🕒 ${r.timestamp || ""}<br><br>
-          ✅ Accepted By:
-          <ul>${acceptedList}</ul>
-        `;
-        document.getElementById("requestsSection").appendChild(div);
-      }
-    });
-
-    // Recharge Function
-    function recharge(uid) {
-      const wref = firebase.database().ref("posters/" + uid + "/wallet");
-      wref.once("value", snap => {
-        let current = snap.val() || 0;
-        let updated = current + 100;
-        wref.set(updated);
-        document.getElementById("wallet-" + uid).textContent = updated;
-        alert("✅ ₹100 added to wallet.");
+    function loadRequests() {
+      const ref = firebase.database().ref("requests");
+      ref.once("value", snap => {
+        const list = document.getElementById("requestList");
+        list.innerHTML = "";
+        snap.forEach(child => {
+          const r = child.val();
+          const el = document.createElement("div");
+          el.className = "card";
+          el.innerHTML = `
+            <b>${r.name}</b> requested <b>${r.category}</b><br>
+            📍 ${r.address}, ${r.city} - ${r.pincode}<br>
+            📱 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
+            💬 ${r.issue}<br>
+            🕒 ${r.timestamp || "N/A"}<br>
+            👥 Accepted By: ${r.acceptedBy ? Object.keys(r.acceptedBy).length : 0} Poster(s)
+          `;
+          list.appendChild(el);
+        });
       });
     }
   </script>
