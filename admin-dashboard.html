@@ -28,12 +28,9 @@
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .section {
-      display: none;
-    }
-    .active {
-      display: block;
-    }
+    .section { display: none; }
+    .active { display: block; }
+
     .grid {
       display: flex;
       flex-wrap: wrap;
@@ -109,6 +106,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
@@ -189,23 +187,24 @@ function approveRecharge(uid) {
   });
 }
 
-// ✅ Updated loadPosters with Approve & Delete buttons
 function loadPosters() {
   const list = document.getElementById("posterList");
   db.ref("posters").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const p = child.val();
+      const uid = child.key;
       list.innerHTML += `
         <div class="card">
           <strong>${p.name}</strong><br>
           🏪 ${p.shop}<br>
           📍 ${p.address}<br>
           💼 ${p.category}<br>
-          📞 <a class="whatsapp" href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a><br>
+          📞 ${p.whatsapp}<br>
           💰 Wallet: ₹${p.wallet || 0}<br>
-          ${p.approved ? "✅ Approved" : `<button class="btn approve" onclick="approvePoster('${child.key}')">✅ Approve</button>`}
-          <button class="btn reject" onclick="deletePoster('${child.key}')">🗑️ Delete</button>
+          ${p.approved ? "✅ Approved" : "⏳ Not Approved"}<br>
+          <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
+          <button class="btn reject" onclick="deletePoster('${uid}')">🗑️ Delete</button>
         </div>
       `;
     });
