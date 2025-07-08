@@ -63,6 +63,19 @@
       text-decoration: none;
       color: #2d3436;
     }
+    #rechargeAlert {
+      display: none;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      margin-left: 6px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -70,16 +83,9 @@
 <h1>👑 ZaraFix Admin Dashboard</h1>
 
 <div class="nav">
-  <button onclick="showSection('rechargeSection')">🔋 Recharge</button>
   <button onclick="showSection('posterSection')">👷 Posters</button>
   <button onclick="showSection('userSection')">🧑‍💻 Users</button>
-  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
-</div>
-
-<!-- 🔋 Recharge Page -->
-<div id="rechargeSection" class="section active">
-  <h2>🔋 Recharge</h2>
-  <p>Recharge related tools or overview here (you can customize).</p>
+  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests <span id="rechargeAlert"></span></button>
 </div>
 
 <!-- 👷 Posters Page -->
@@ -95,7 +101,7 @@
 </div>
 
 <!-- 🔋 Recharge Requests Page -->
-<div id="rechargeRequestSection" class="section">
+<div id="rechargeRequestSection" class="section active">
   <h2>🔋 Recharge Requests</h2>
   <div id="rechargeList" class="grid"></div>
 </div>
@@ -130,12 +136,23 @@ auth.onAuthStateChanged(user => {
       loadRechargeRequests();
       loadPosters();
       loadUsers();
+      checkNewRechargeRequests();
     } else {
       alert("Access denied. Admin only.");
       location.href = "index.html";
     }
   });
 });
+
+function checkNewRechargeRequests() {
+  db.ref("rechargeRequests").once("value").then(snapshot => {
+    let found = false;
+    snapshot.forEach(child => {
+      if (child.val().status === "pending") found = true;
+    });
+    document.getElementById("rechargeAlert").style.display = found ? "inline-block" : "none";
+  });
+}
 
 function loadRechargeRequests() {
   const list = document.getElementById("rechargeList");
@@ -147,7 +164,7 @@ function loadRechargeRequests() {
         list.innerHTML += `
           <div class="card">
             <strong>${r.name}</strong><br>
-            🆔 UID: <code>${r.userId}</code><br>
+            🏧 UID: <code>${r.userId}</code><br>
             📞 <a class="whatsapp" href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
             💰 Amount: ₹${r.amount}<br>
             ⏰ ${new Date(r.timestamp).toLocaleString()}<br>
@@ -169,6 +186,7 @@ function approveRecharge(uid) {
     db.ref("rechargeRequests/" + uid).update({ status: "approved" });
     alert("✅ Recharge approved. ₹100 added.");
     loadRechargeRequests();
+    checkNewRechargeRequests();
   });
 }
 
