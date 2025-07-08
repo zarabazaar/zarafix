@@ -4,96 +4,79 @@
   <title>👑 ZaraFix Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-    }
+    body { font-family: sans-serif; background: #f2f2f2; padding: 20px; margin: 0; }
+    h1, h2 { text-align: center; }
+
     .nav-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 20px 0;
     }
-    .nav-buttons a button {
-      padding: 12px 20px;
+    .nav-buttons button {
+      padding: 14px 22px;
       font-size: 16px;
-      background: linear-gradient(to right, #2196F3, #0D47A1);
-      color: white;
       border: none;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      background: linear-gradient(to right, #1e88e5, #42a5f5);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      color: white;
       cursor: pointer;
       transition: transform 0.2s;
     }
-    .nav-buttons a button:hover {
+    .nav-buttons button:hover {
       transform: scale(1.05);
     }
+
     .grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
     }
     .card {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
       width: 90%;
       max-width: 340px;
     }
     .btn {
       padding: 8px 12px;
-      margin: 6px 4px 0 0;
+      margin-top: 10px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       color: white;
+      cursor: pointer;
     }
-    .approve { background-color: #2ecc71; }
-    .reject { background-color: #e74c3c; }
-    .delete { background-color: #ff9800; }
-    .recharge { background-color: #9b59b6; }
-    a.whatsapp {
-      text-decoration: none;
-      color: #2d3436;
-    }
-    .section {
-      margin-top: 50px;
-    }
+    .approve { background-color: #27ae60; }
+    .recharge { background-color: #8e44ad; }
+    a { text-decoration: none; }
+
+    .section { display: none; margin-top: 30px; }
+    .active { display: block; }
   </style>
 </head>
 <body>
 
   <h1>👑 ZaraFix Admin Dashboard</h1>
 
-  <!-- Navigation Buttons -->
   <div class="nav-buttons">
-    <a href="poster-dashboard.html"><button>🪰 Poster Dashboard</button></a>
-    <a href="service-request.html"><button>📋 Service Request Form</button></a>
-    <a href="admin-posters.html"><button>🚰 Admin Posters Approval</button></a>
+    <button onclick="showSection('rechargeSection')">🔋 Recharge</button>
+    <button onclick="showSection('posterSection')">👷 Posters</button>
+    <button onclick="showSection('userSection')">🧑‍💻 Users</button>
   </div>
 
-  <!-- Recharge Requests -->
-  <div class="section">
-    <h2>💰 Recharge Requests</h2>
+  <!-- Recharge Section -->
+  <div id="rechargeSection" class="section">
+    <h2>🔋 Recharge Requests</h2>
     <div id="rechargeList" class="grid"></div>
   </div>
 
-  <!-- Service Providers -->
-  <div class="section">
-    <h2>🧑‍🔧 All Service Providers</h2>
+  <!-- Poster Section -->
+  <div id="posterSection" class="section">
+    <h2>👷 All Service Providers</h2>
     <div id="posterList" class="grid"></div>
   </div>
 
-  <!-- User Requests -->
-  <div class="section">
-    <h2>👥 All Users & Their Requests</h2>
+  <!-- User Section -->
+  <div id="userSection" class="section">
+    <h2>🧑‍💻 All Users & Requests</h2>
     <div id="userList" class="grid"></div>
   </div>
 
@@ -120,15 +103,58 @@
       if (!user) return location.href = "index.html";
       db.ref("users/" + user.uid).once("value").then(snap => {
         if (snap.exists() && snap.val().isAdmin === true) {
+          loadRechargeRequests();
           loadPosters();
           loadUsers();
-          loadRechargeRequests();
+          showSection('rechargeSection'); // default
         } else {
-          alert("Access denied. Admin only.");
+          alert("Access denied.");
           location.href = "index.html";
         }
       });
     });
+
+    function showSection(id) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function loadRechargeRequests() {
+      const list = document.getElementById("rechargeList");
+      db.ref("rechargeRequests").once("value").then(snapshot => {
+        list.innerHTML = "";
+        snapshot.forEach(userSnap => {
+          const userId = userSnap.key;
+          userSnap.forEach(reqSnap => {
+            const r = reqSnap.val();
+            if (r.status === "pending") {
+              list.innerHTML += `
+                <div class="card">
+                  <b>${r.name}</b><br>
+                  UID: <b>${userId}</b><br>
+                  📞 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
+                  💰 ₹${r.amount}<br>
+                  ⏰ ${new Date(r.timestamp).toLocaleString()}<br>
+                  <img src="${r.image}" style="width:100%;border-radius:10px;margin-top:10px;"><br>
+                  <button class="btn approve" onclick="approveRecharge('${userId}', '${reqSnap.key}')">✅ Approve</button>
+                </div>
+              `;
+            }
+          });
+        });
+      });
+    }
+
+    function approveRecharge(uid, key) {
+      const walletRef = db.ref("posters/" + uid + "/wallet");
+      walletRef.once("value").then(snap => {
+        const current = snap.val() || 0;
+        walletRef.set(current + 100);
+        db.ref("rechargeRequests/" + uid + "/" + key).update({ status: "approved" });
+        alert("✅ Recharge Approved");
+        loadRechargeRequests();
+      });
+    }
 
     function loadPosters() {
       const posterList = document.getElementById("posterList");
@@ -137,20 +163,14 @@
         snapshot.forEach(child => {
           const p = child.val();
           const uid = child.key;
-          const isApproved = p.approved === true;
           posterList.innerHTML += `
             <div class="card">
-              <strong>${p.name}</strong><br>
-              🪰 ${p.category}<br>
-              📍 ${p.address || "Not set"}<br>
-              💰 ₹${p.wallet || 0}<br>
-              📞 <a class="whatsapp" href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a><br>
-              Status: <b>${isApproved ? "✅ Approved" : "⏳ Pending"}</b><br>
-              ${!isApproved ? `
-                <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
-                <button class="btn reject" onclick="rejectPoster('${uid}')">❌ Reject</button>
-              ` : ''}
-              <button class="btn recharge" onclick="recharge('${uid}')">💰 Recharge ₹100</button>
+              <b>${p.name}</b><br>
+              🛠️ ${p.category}<br>
+              📍 ${p.address}<br>
+              📞 <a href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a><br>
+              UID: <b>${uid}</b><br>
+              💰 ₹${p.wallet || 0}
             </div>
           `;
         });
@@ -163,100 +183,29 @@
         userList.innerHTML = "";
         snapshot.forEach(userSnap => {
           const userId = userSnap.key;
-          const requests = [];
+          const inner = [];
           userSnap.forEach(reqSnap => {
-            const req = reqSnap.val();
-            const accepted = req.acceptedBy
-              ? Object.values(req.acceptedBy).map(x => x.name).join(", ")
+            const r = reqSnap.val();
+            const accepted = r.acceptedBy
+              ? Object.values(r.acceptedBy).map(x => x.name).join(", ")
               : "None";
-            requests.push(`
-              <div style="border-top:1px solid #ddd; margin-top:10px; padding-top:6px;">
-                <b>Issue:</b> ${req.issue}<br>
-                📍 ${req.address}, ${req.pincode}<br>
-                📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
-                ✅ Accepted By: ${accepted}<br>
-                <button class="btn delete" onclick="deleteRequest('${userId}', '${reqSnap.key}')">🗑️ Delete</button>
+            inner.push(`
+              <div style="margin-top:10px;border-top:1px solid #ddd;padding-top:6px;">
+                Issue: ${r.issue}<br>
+                📍 ${r.address}, ${r.pincode}<br>
+                📞 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
+                ✅ Accepted by: ${accepted}
               </div>
             `);
           });
-
           userList.innerHTML += `
             <div class="card">
-              👤 <b>${userId}</b><br>
-              ${requests.join("")}
+              👤 <b>${userId}</b>
+              ${inner.join("")}
             </div>
           `;
         });
       });
-    }
-
-    function loadRechargeRequests() {
-      const list = document.getElementById("rechargeList");
-      db.ref("rechargeRequests").once("value").then(snapshot => {
-        list.innerHTML = "";
-        snapshot.forEach(child => {
-          const r = child.val();
-          if (r.status === "pending") {
-            list.innerHTML += `
-              <div class="card">
-                <strong>${r.name}</strong><br>
-                📞 <a class="whatsapp" href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
-                💰 Amount: ₹${r.amount}<br>
-                ⏰ ${new Date(r.timestamp).toLocaleString()}<br>
-                <img src="${r.image}" style="width:100%;border-radius:10px;"><br>
-                <button class="btn approve" onclick="approveRecharge('${r.userId}')">✅ Approve Recharge</button>
-              </div>
-            `;
-          }
-        });
-      });
-    }
-
-    function approvePoster(uid) {
-      db.ref("posters/" + uid).update({ approved: true }).then(() => {
-        alert("✅ Poster approved.");
-        loadPosters();
-      });
-    }
-
-    function rejectPoster(uid) {
-      if (confirm("Reject and delete this poster?")) {
-        db.ref("posters/" + uid).remove().then(() => {
-          alert("❌ Poster rejected and removed.");
-          loadPosters();
-        });
-      }
-    }
-
-    function approveRecharge(uid) {
-      const walletRef = db.ref("posters/" + uid + "/wallet");
-      walletRef.once("value").then(snap => {
-        const current = snap.val() || 0;
-        walletRef.set(current + 100);
-        db.ref("rechargeRequests/" + uid).update({ status: "approved" });
-        alert("✅ Recharge approved. ₹100 added.");
-        loadRechargeRequests();
-        loadPosters();
-      });
-    }
-
-    function recharge(uid) {
-      const walletRef = db.ref("posters/" + uid + "/wallet");
-      walletRef.once("value").then(snap => {
-        const current = snap.val() || 0;
-        db.ref("posters/" + uid).update({ wallet: current + 100 });
-        alert("💸 ₹100 added to wallet.");
-        loadPosters();
-      });
-    }
-
-    function deleteRequest(userId, requestId) {
-      if (confirm("Delete this user request?")) {
-        db.ref(`requests/${userId}/${requestId}`).remove().then(() => {
-          alert("🖑️ Request deleted.");
-          loadUsers();
-        });
-      }
     }
   </script>
 </body>
