@@ -201,7 +201,7 @@ function loadPosters() {
           📞 ${p.whatsapp}<br>
           💰 Wallet: ₹${p.wallet || 0}<br>
           ${p.approved ? "✅ Approved" : "⏳ Not Approved"}<br>
-          ${p.approved ? "" : `<button class="btn approve" onclick="approvePoster('${child.key}')">✅ Approve</button>`}
+          <button class="btn approve" onclick="approvePoster('${child.key}')">✅ Approve</button>
           <button class="btn delete" onclick="deletePoster('${child.key}')">🗑️ Delete</button>
         </div>
       `;
@@ -236,4 +236,29 @@ function loadUsers() {
         list.innerHTML += `
           <div class="card">
             <strong>${req.name || "Unnamed"}</strong><br>
-            📞 <a class="whatsapp" href="https
+            📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
+            📍 ${req.address}<br>
+            🔧 ${req.category}<br>
+            📝 ${req.issue || "No issue provided"}<br>
+            🕒 ${new Date(req.timestamp).toLocaleString()}<br>
+            👷 Accepted By: ${accepted}<br>
+            <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
+            <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
+          </div>
+        `;
+      });
+    });
+  });
+}
+
+function deleteRequest(userId, requestId) {
+  if (confirm("Delete this service request?")) {
+    db.ref("requests/" + userId + "/" + requestId).remove();
+    alert("🗑️ Request deleted.");
+    loadUsers();
+  }
+}
+</script>
+
+</body>
+</html>
