@@ -37,7 +37,6 @@
     <button class="btn3d" onclick="login()">🔐 Login with Google</button>
   </div>
 
-  <!-- Registration -->
   <div id="registerForm" class="hidden">
     <h3>📝 Poster Registration</h3>
     <div class="input3d"><input type="text" id="posterName" placeholder="Your Name"></div>
@@ -54,18 +53,16 @@
     </div>
     <div class="input3d"><input type="text" id="whatsapp" placeholder="WhatsApp Number"></div>
     <div class="wallet">Wallet: ₹<span id="walletAmt">0</span></div>
-    <button class="btn3d" onclick="submitPoster()">📩 Submit</button>
     <p id="regMsg" style="color:red;"></p>
+    <button class="btn3d" onclick="submitPoster()">📩 Submit</button>
   </div>
 
-  <!-- Recharge -->
   <div id="rechargeForm" class="hidden">
     <h3>💰 Recharge Required</h3>
-    <p style="color:red;">❌ Wallet balance ₹0. Please recharge ₹100 to continue.</p>
-    <p>Go to <a href="recharge.html"><strong>Recharge Page</strong></a> to upload screenshot.</p>
+    <p style="color:red;">Your wallet is below ₹100. Please recharge.</p>
+    <p>Scan UPI QR and send ₹100, then upload screenshot via your recharge panel.</p>
   </div>
 
-  <!-- Dashboard -->
   <div id="posterDashboard" class="hidden">
     <p class="wallet">Wallet: ₹<span id="walletAmt2">0</span></p>
     <div id="jobList"></div>
@@ -73,6 +70,7 @@
   </div>
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -100,25 +98,29 @@ firebase.auth().onAuthStateChanged(user => {
   const posterRef = firebase.database().ref("posters/" + user.uid);
   posterRef.once("value").then(snap => {
     const data = snap.val();
-    if (data && data.userId === user.uid) {
-      if (data.approved === true) {
-        const w = data.wallet || 0;
-        if (w >= 100) {
-          document.getElementById("posterDashboard").classList.remove("hidden");
-          document.getElementById("walletAmt2").textContent = w;
-          deductDailyCharge();
-          loadJobs(data.category);
-        } else {
-          document.getElementById("rechargeForm").classList.remove("hidden");
-        }
-      } else {
-        document.getElementById("registerForm").classList.remove("hidden");
-        document.getElementById("walletAmt").textContent = data.wallet || 0;
-        document.getElementById("regMsg").textContent = "⏳ Waiting for admin approval...";
-      }
-    } else {
+    const w = data?.wallet || 0;
+
+    if (!data || data.userId !== user.uid) {
       document.getElementById("registerForm").classList.remove("hidden");
-      document.getElementById("walletAmt").textContent = 0;
+      return;
+    }
+
+    if (!data.approved) {
+      document.getElementById("registerForm").classList.remove("hidden");
+      document.getElementById("walletAmt").textContent = w;
+      document.getElementById("regMsg").textContent = w < 100
+        ? "⏳ Waiting for admin approval... Recharge also required."
+        : "⏳ Waiting for admin approval...";
+      if (w < 100) {
+        document.getElementById("rechargeForm").classList.remove("hidden");
+      }
+    } else if (data.approved && w >= 100) {
+      document.getElementById("posterDashboard").classList.remove("hidden");
+      document.getElementById("walletAmt2").textContent = w;
+      deductDailyCharge();
+      loadJobs(data.category);
+    } else {
+      document.getElementById("rechargeForm").classList.remove("hidden");
     }
   });
 });
@@ -126,7 +128,6 @@ firebase.auth().onAuthStateChanged(user => {
 function login() {
   firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
 }
-
 function logout() {
   firebase.auth().signOut().then(() => location.reload());
 }
@@ -208,7 +209,7 @@ function acceptJob(userId, jobKey) {
 }
 
 function rejectJob(userId, jobKey) {
-  alert("❌ Rejected (just UI). Logic can be expanded.");
+  alert("❌ Rejected (logic optional)");
 }
 </script>
 </body>
