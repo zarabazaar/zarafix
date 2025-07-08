@@ -35,6 +35,19 @@
       color: green;
       text-decoration: none;
     }
+    .scanner {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .scanner img {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .scanner p {
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -48,6 +61,12 @@
   <p><span class="label">🔢 UID:</span> <span id="uid">...</span></p>
   <p><span class="label">📌 Status:</span> <span id="status">...</span></p>
   <img id="receipt" src="" alt="Payment Screenshot">
+</div>
+
+<!-- Scanner Image Box -->
+<div class="scanner">
+  <p>🔄 Admin Scanner for Recharge Verification</p>
+  <img src="https://i.ibb.co/YOUR_SCANNER_IMAGE_LINK" alt="Admin Scanner">
 </div>
 
 <!-- Firebase SDK -->
