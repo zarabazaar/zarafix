@@ -1,59 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Recharge ₹100</title>
+  <title>🔍 Recharge Request Details</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background: #f5f5f5; padding: 20px; }
-    .box {
-      max-width: 400px;
+    body {
+      font-family: Arial;
+      background: #f0f2f5;
+      padding: 20px;
+    }
+    .card {
+      max-width: 500px;
       margin: auto;
-      background: #fff;
+      background: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
     }
-    input, button {
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .label {
+      font-weight: bold;
+      display: inline-block;
+      width: 120px;
+    }
+    img {
       width: 100%;
-      margin-top: 12px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    .approve-btn {
+      margin-top: 20px;
+      width: 100%;
       padding: 12px;
+      background: linear-gradient(to right, #00b09b, #96c93d);
+      color: white;
+      border: none;
       border-radius: 8px;
       font-size: 16px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: linear-gradient(to right, #27ae60, #2ecc71);
-      color: white;
-      font-weight: bold;
-      border: none;
       cursor: pointer;
-    }
-    #preview {
-      display: none;
-      margin-top: 10px;
-      border-radius: 10px;
-      max-width: 100%;
     }
   </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>🔋 Recharge ₹100</h2>
-  <input type="text" id="name" placeholder="Your Name" required>
-  <input type="text" id="whatsapp" placeholder="WhatsApp Number" value="918806940156" readonly>
-  <input type="file" id="image" accept="image/*" required>
-  <img id="preview" alt="Receipt Preview">
-  <button onclick="submitRecharge()">📤 Submit Recharge</button>
+<div class="card">
+  <h2>🔍 Recharge Request</h2>
+  <p><span class="label">👤 Name:</span> <span id="name">Loading...</span></p>
+  <p><span class="label">📞 WhatsApp:</span> <a id="whatsapp" target="_blank">Loading...</a></p>
+  <p><span class="label">💰 Amount:</span> ₹<span id="amount">...</span></p>
+  <p><span class="label">📅 Submitted:</span> <span id="timestamp">...</span></p>
+  <p><span class="label">🔢 UID:</span> <span id="uid">...</span></p>
+  <p><span class="label">📌 Status:</span> <span id="status">...</span></p>
+  <img id="receipt" src="" alt="Payment Screenshot">
+  <button class="approve-btn" onclick="approveRecharge()">✅ Approve Recharge</button>
 </div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
     authDomain: "zara-fix.firebaseapp.com",
@@ -65,65 +74,35 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const auth = firebase.auth();
 
-  // ImgBB Upload
-  async function uploadToImgBB(file) {
-    const apiKey = "72c022c1182b94d6baa3d4fc675dd641";
-    const form = new FormData();
-    form.append("image", file);
-    const res = await fetch("https://api.imgbb.com/1/upload?key=" + apiKey, {
-      method: "POST",
-      body: form
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get("uid");
+
+  if (!uid) {
+    alert("❌ Invalid UID.");
+  } else {
+    document.getElementById("uid").textContent = uid;
+    db.ref("rechargeRequests/" + uid).once("value").then(snapshot => {
+      const data = snapshot.val();
+      if (!data) return alert("❌ No recharge request found.");
+
+      document.getElementById("name").textContent = data.name || "N/A";
+      document.getElementById("whatsapp").textContent = data.whatsapp || "N/A";
+      document.getElementById("whatsapp").href = "https://wa.me/" + data.whatsapp;
+      document.getElementById("amount").textContent = data.amount || "0";
+      document.getElementById("status").textContent = data.status || "pending";
+      document.getElementById("timestamp").textContent = new Date(data.timestamp).toLocaleString();
+      document.getElementById("receipt").src = data.image || "";
     });
-    const data = await res.json();
-    if (!data.success) throw new Error("Image upload failed.");
-    return data.data.url;
   }
 
-  // Show preview
-  document.getElementById("image").addEventListener("change", function(e) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      document.getElementById("preview").src = event.target.result;
-      document.getElementById("preview").style.display = "block";
-    };
-    reader.readAsDataURL(e.target.files[0]);
-  });
-
-  async function submitRecharge() {
-    const name = document.getElementById("name").value.trim();
-    const whatsapp = document.getElementById("whatsapp").value.trim();
-    const file = document.getElementById("image").files[0];
-    if (!name || !whatsapp || !file) return alert("Please fill all fields.");
-
-    // Wait for login
-    auth.onAuthStateChanged(async user => {
-      if (!user) return alert("Please login first.");
-      const userId = user.uid;
-
-      try {
-        const imageUrl = await uploadToImgBB(file);
-        await db.ref("rechargeRequests/" + userId).set({
-          userId,
-          name,
-          whatsapp,
-          amount: 100,
-          status: "pending",
-          image: imageUrl,
-          timestamp: Date.now()
-        });
-
-        alert("✅ Recharge submitted!");
-
-        // Send admin WhatsApp message
-        const message = `*Recharge Request*\n👤 Name: ${name}\n📞 ${whatsapp}\n💰 Amount: ₹100\n🧾 Screenshot: ${imageUrl}\n🔗 Approve: https://zarafix.vercel.app/rechargeView.html?uid=${userId}`;
-        const encoded = encodeURIComponent(message);
-        window.open("https://wa.me/918806940156?text=" + encoded, "_blank");
-
-      } catch (err) {
-        alert("❌ Error: " + err.message);
-      }
+  function approveRecharge() {
+    if (!uid) return;
+    db.ref("rechargeRequests/" + uid).update({ status: "approved" });
+    db.ref("posters/" + uid + "/wallet").once("value").then(snap => {
+      const oldAmount = snap.val() || 0;
+      db.ref("posters/" + uid).update({ wallet: oldAmount + 100 });
+      alert("✅ Recharge approved and ₹100 added to wallet.");
     });
   }
 </script>
