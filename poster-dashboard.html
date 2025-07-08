@@ -54,13 +54,14 @@
     <div class="input3d"><input type="text" id="whatsapp" placeholder="WhatsApp Number"></div>
     <div class="wallet">Wallet: ₹<span id="walletAmt">0</span></div>
     <p id="regMsg" style="color:red;"></p>
-    <button class="btn3d" onclick="submitPoster()">📩 Submit</button>
+    <button id="submitBtn" class="btn3d" onclick="submitPoster()">📩 Submit</button>
   </div>
 
   <div id="rechargeForm" class="hidden">
     <h3>💰 Recharge Required</h3>
     <p style="color:red;">Your wallet is below ₹100. Please recharge.</p>
     <p>Scan UPI QR and send ₹100, then upload screenshot via your recharge panel.</p>
+    <a href="recharge.html" class="btn3d">🔁 Go to Recharge</a>
   </div>
 
   <div id="posterDashboard" class="hidden">
@@ -101,16 +102,20 @@ firebase.auth().onAuthStateChanged(user => {
     const w = data?.wallet || 0;
 
     if (!data || data.userId !== user.uid) {
+      // New poster
       document.getElementById("registerForm").classList.remove("hidden");
       return;
     }
 
+    document.getElementById("walletAmt").textContent = w;
+
     if (!data.approved) {
       document.getElementById("registerForm").classList.remove("hidden");
-      document.getElementById("walletAmt").textContent = w;
-      document.getElementById("regMsg").textContent = w < 100
-        ? "⏳ Waiting for admin approval... Recharge also required."
-        : "⏳ Waiting for admin approval...";
+      document.getElementById("submitBtn").style.display = "none";
+      document.getElementById("regMsg").textContent =
+        w < 100
+          ? "⏳ Waiting for admin approval... Recharge also required."
+          : "⏳ Waiting for admin approval...";
       if (w < 100) {
         document.getElementById("rechargeForm").classList.remove("hidden");
       }
@@ -140,7 +145,10 @@ function submitPoster() {
   const wa = document.getElementById("whatsapp").value.trim();
   if (!name || !shop || !addr || !cat || !wa) return alert("All fields required!");
   const ref = firebase.database().ref("posters/" + currentUser.uid);
-  const data = { name, shop, address: addr, category: cat, whatsapp: wa, wallet: 0, userId: currentUser.uid, approved: false };
+  const data = {
+    name, shop, address: addr, category: cat,
+    whatsapp: wa, wallet: 0, userId: currentUser.uid, approved: false
+  };
   ref.set(data).then(() => alert("✅ Registered. Waiting for approval."));
 }
 
