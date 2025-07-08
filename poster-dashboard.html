@@ -23,6 +23,8 @@
       background:linear-gradient(to right,#2196F3,#21CBF3);
       box-shadow:0 6px 16px rgba(0,0,0,0.3);
       cursor:pointer;
+      text-align:center;
+      text-decoration:none;
     }
     .card {
       background:#fefefe; padding:15px; margin:10px 0;
@@ -40,32 +42,9 @@
     <button class="btn3d" onclick="login()">🔐 Login with Google</button>
   </div>
 
-  <div id="registerForm" class="hidden">
-    <h3>📝 Poster Registration</h3>
-    <div class="input3d"><input type="text" id="posterName" placeholder="Your Name"></div>
-    <div class="input3d"><input type="text" id="shopName" placeholder="Shop Name"></div>
-    <div class="input3d"><input type="text" id="address" placeholder="Address"></div>
-    <div class="input3d">
-      <select id="category">
-        <option value="">-- Select Category --</option>
-        <option>AC Repair</option>
-        <option>Washing Machine Repair</option>
-        <option>TV Repair</option>
-        <option>Refrigerator Repair</option>
-        <option>Electrician</option>
-        <option>Plumbing</option>
-        <option>Carpenter</option>
-        <option>Others</option>
-      </select>
-    </div>
-    <div class="input3d"><input type="text" id="whatsapp" placeholder="WhatsApp Number"></div>
-    <div class="wallet">Wallet: ₹<span id="walletAmt">0</span></div>
-    <button class="btn3d" onclick="submitPoster()">📩 Submit</button>
-    <p id="regMsg" style="color:red;"></p>
-  </div>
-
   <div id="posterDashboard" class="hidden">
-    <p class="wallet">Wallet: ₹<span id="walletAmt2">0</span></p>
+    <p class="wallet">Wallet: ₹<span id="walletAmt">0</span></p>
+    <button class="btn3d" onclick="logout()">🚪 Logout</button>
     <div id="jobList"></div>
   </div>
 </div>
@@ -86,134 +65,66 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-let currentUser, posterRef;
-
+let currentUser;
 firebase.auth().onAuthStateChanged(user => {
+  if (!user) return;
   currentUser = user;
-  if (!user) {
-    document.getElementById("authSection").classList.remove("hidden");
-    return;
-  }
   document.getElementById("authSection").classList.add("hidden");
-
-  posterRef = firebase.database().ref("posters/" + user.uid);
-  posterRef.once("value", snap => {
-    const data = snap.val();
-
-    if (data && data.userId === user.uid) {
-      if (data.approved === true) {
-        const w = data.wallet || 0;
-        if (w >= 100) {
-          document.getElementById("posterDashboard").classList.remove("hidden");
-          document.getElementById("walletAmt2").textContent = w;
-          deductDailyCharge();
-          loadJobs(data.category);
-        } else {
-          document.getElementById("registerForm").classList.remove("hidden");
-          document.getElementById("walletAmt").textContent = w;
-          document.getElementById("regMsg").textContent = "❌ Please recharge your wallet.";
-        }
-      } else {
-        document.getElementById("registerForm").classList.remove("hidden");
-        document.getElementById("walletAmt").textContent = data.wallet || 0;
-        document.getElementById("regMsg").textContent = "⏳ Waiting for admin approval...";
-      }
-    } else {
-      document.getElementById("registerForm").classList.remove("hidden");
-      document.getElementById("walletAmt").textContent = 0;
-    }
-  });
+  document.getElementById("posterDashboard").classList.remove("hidden");
+  loadDashboard();
 });
 
 function login() {
   firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
 }
 
-function submitPoster() {
-  const name = document.getElementById("posterName").value.trim();
-  const shop = document.getElementById("shopName").value.trim();
-  const addr = document.getElementById("address").value.trim();
-  const cat = document.getElementById("category").value;
-  const wa = document.getElementById("whatsapp").value.trim();
-  if (!name || !shop || !addr || !cat || !wa) return alert("All fields required!");
-
-  const data = {
-    name, shop, address: addr, category: cat, whatsapp: wa,
-    wallet: 0, userId: currentUser.uid, approved: false
-  };
-
-  posterRef.set(data).then(() => {
-    const rechargeRef = firebase.database().ref("rechargeRequests/" + currentUser.uid);
-    rechargeRef.set({
-      userId: currentUser.uid,
-      name, whatsapp: wa,
-      amount: 100,
-      status: "pending",
-      timestamp: Date.now()
-    }).then(() => {
-      alert("💰 ₹100 Recharge request submitted. Waiting for admin approval.");
-      location.reload();
-    });
-  });
+function logout() {
+  firebase.auth().signOut().then(() => location.reload());
 }
 
-function deductDailyCharge() {
-  const today = new Date().toISOString().split("T")[0];
-  const dailyRef = firebase.database().ref("dailyDeduction/" + currentUser.uid + "/" + today);
-  const walletRef = firebase.database().ref("posters/" + currentUser.uid + "/wallet");
-
-  dailyRef.once("value", snap => {
-    if (!snap.exists()) {
-      walletRef.once("value", s => {
-        let w = s.val() || 0;
-        if (w >= 3) {
-          walletRef.set(w - 3);
-          dailyRef.set(true);
-        }
-      });
-    }
-  });
-}
-
-function loadJobs(category) {
+function loadDashboard() {
   const jobList = document.getElementById("jobList");
-  jobList.innerHTML = "Loading...";
+  const walletSpan = document.getElementById("walletAmt");
+  const uid = currentUser.uid;
 
-  firebase.database().ref("requests").on("value", snap => {
-    jobList.innerHTML = "";
-    snap.forEach(child => {
-      const job = child.val(), key = child.key;
-      if (job.category === category) {
-        const accepted = job.acceptedBy && job.acceptedBy[currentUser.uid];
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <b>${job.name}</b> | ${job.city}<br>
-          🏠 ${job.address}, ${job.pincode}<br>
-          📦 ${job.category}<br>
-          💬 ${job.issue}<br>
-          <small>${job.timestamp || ""}</small><br><br>
-          ${accepted ? `✅ Accepted<br><a class="btn3d" href="https://wa.me/${job.whatsapp}" target="_blank">WhatsApp</a>` :
-            `<button class="btn3d" onclick="acceptJob('${key}')">✅ Accept</button>`}
-        `;
-        jobList.appendChild(card);
-      }
+  firebase.database().ref("posters/" + uid).once("value").then(snap => {
+    const data = snap.val();
+    const wallet = data.wallet || 0;
+    walletSpan.textContent = wallet;
+
+    firebase.database().ref("requests").once("value").then(snapshot => {
+      jobList.innerHTML = "";
+      snapshot.forEach(child => {
+        child.forEach(grand => {
+          const job = grand.val();
+          const key = grand.key;
+          const acceptedBy = job.acceptedBy || {};
+
+          if (acceptedBy[uid]) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <b>${job.name}</b><br>
+              🏠 ${job.address}, ${job.pincode}<br>
+              💬 ${job.issue}<br>
+              📞 ${job.whatsapp}<br>
+              <a class="btn3d" href="https://wa.me/${job.whatsapp}" target="_blank">💬 WhatsApp</a>
+              <button class="btn3d" onclick="rejectJob('${child.key}', '${key}')">❌ Reject</button>
+            `;
+            jobList.appendChild(card);
+          }
+        });
+      });
     });
   });
 }
 
-function acceptJob(key) {
-  const walletRef = firebase.database().ref("posters/" + currentUser.uid + "/wallet");
-  walletRef.once("value", snap => {
-    let w = snap.val() || 0;
-    if (w < 20) return alert("❌ Insufficient balance!");
-
-    const acceptRef = firebase.database().ref("requests/" + key + "/acceptedBy/" + currentUser.uid);
-    acceptRef.set(true).then(() => {
-      walletRef.set(w - 20);
-      alert("✅ Job Accepted! ₹20 deducted.");
-      location.reload();
-    });
+function rejectJob(userId, requestId) {
+  if (!confirm("Are you sure to reject this job?")) return;
+  const path = `requests/${userId}/${requestId}/acceptedBy/${currentUser.uid}`;
+  firebase.database().ref(path).remove().then(() => {
+    alert("❌ Job Rejected.");
+    loadDashboard();
   });
 }
 </script>
