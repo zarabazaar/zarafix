@@ -57,6 +57,14 @@
     <p id="regMsg" style="color:red;"></p>
   </div>
 
+  <div id="rechargeForm" class="hidden">
+    <h3>💳 Recharge Wallet</h3>
+    <p>Pay ₹100 and upload payment screenshot:</p>
+    <img src="https://i.ibb.co/MV4nMjb/rechargeqr.jpg" style="width:100%;border-radius:10px;"><br><br>
+    <input type="file" id="rechargeScreenshot"><br>
+    <button class="btn3d" onclick="submitRecharge()">📤 Submit Recharge Request</button>
+  </div>
+
   <div id="posterDashboard" class="hidden">
     <p class="wallet">Wallet: ₹<span id="walletAmt2">0</span></p>
     <div id="jobList"></div>
@@ -100,9 +108,7 @@ firebase.auth().onAuthStateChanged(user => {
           deductDailyCharge();
           loadJobs(data.category);
         } else {
-          document.getElementById("registerForm").classList.remove("hidden");
-          document.getElementById("walletAmt").textContent = w;
-          document.getElementById("regMsg").textContent = "❌ Please recharge your wallet.";
+          document.getElementById("rechargeForm").classList.remove("hidden");
         }
       } else {
         document.getElementById("registerForm").classList.remove("hidden");
@@ -134,6 +140,36 @@ function submitPoster() {
   const ref = firebase.database().ref("posters/" + currentUser.uid);
   const data = { name, shop, address: addr, category: cat, whatsapp: wa, wallet: 0, userId: currentUser.uid, approved: false };
   ref.set(data).then(() => alert("✅ Registered. Waiting for approval."));
+}
+
+function submitRecharge() {
+  const fileInput = document.getElementById("rechargeScreenshot");
+  if (!fileInput.files[0]) return alert("Please select a screenshot!");
+  
+  const formData = new FormData();
+  formData.append("image", fileInput.files[0]);
+
+  fetch("https://api.imgbb.com/1/upload?key=72c022c1182b94d6baa3d4fc675dd641", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    const imageUrl = data.data.url;
+    const rechargeRef = firebase.database().ref("rechargeRequests/" + currentUser.uid);
+    rechargeRef.set({
+      userId: currentUser.uid,
+      name: currentUser.displayName,
+      whatsapp: currentUser.phoneNumber || "N/A",
+      amount: 100,
+      image: imageUrl,
+      timestamp: Date.now(),
+      status: "pending"
+    }).then(() => {
+      alert("✅ Recharge request submitted.");
+      document.getElementById("rechargeForm").classList.add("hidden");
+    });
+  });
 }
 
 function deductDailyCharge() {
