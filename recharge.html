@@ -27,28 +27,22 @@
       font-size: 16px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
-    button, .btn {
-      display: inline-block;
+    button {
       width: 100%;
       margin-top: 12px;
-      padding: 12px 16px;
-      font-size: 14px;
+      padding: 14px;
+      font-size: 16px;
       font-weight: bold;
       border-radius: 12px;
       border: none;
+      background: linear-gradient(to right, #00c853, #64dd17);
       color: white;
       cursor: pointer;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s ease;
     }
-    button:hover, .btn:hover {
+    button:hover {
       transform: scale(1.03);
-    }
-    .green-btn {
-      background: linear-gradient(to right, #00c853, #64dd17);
-    }
-    .orange-btn {
-      background: linear-gradient(to right, #f39c12, #e67e22);
     }
     #scanner {
       width: 200px;
@@ -73,18 +67,16 @@
 <div class="box" id="formBox">
   <h2>🔋 Recharge ₹100</h2>
 
-  <!-- ✅ Fixed image link -->
-  <img id="scanner" src="https://i.ibb.co/C3JkFv4/WhatsApp-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" alt="Scan QR to Pay">
+  <!-- ✅ Scanner Image Updated -->
+  <img id="scanner" src="https://i.ibb.co/C3JkFv4K/Whats-App-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" alt="Scan QR to Pay">
 
-  <!-- 🔽 Smaller Download Button -->
-  <a class="btn orange-btn" style="width:150px; margin-top:10px;" href="https://i.ibb.co/C3JkFv4/WhatsApp-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" download="ZaraFix-QR.jpg">📥 Save QR</a>
   <div class="note">📌 Long press QR to save to gallery (on mobile)</div>
 
   <input type="text" id="name" placeholder="Your Name" required>
   <input type="text" id="whatsapp" placeholder="Your WhatsApp (10 digits)" required>
   <input type="file" id="image" accept="image/*" required>
   <img id="preview" alt="Screenshot Preview" style="display:none" />
-  <button id="submitBtn" class="green-btn" onclick="submitRecharge()">📤 Submit Recharge</button>
+  <button id="submitBtn" onclick="submitRecharge()">📤 Submit Recharge</button>
 </div>
 
 <div class="wait-box" id="waitingBox" style="display: none;">
