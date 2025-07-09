@@ -165,7 +165,7 @@ function loadRechargeRequests() {
             💰 Amount: ₹${r.amount}<br>
             ⏰ ${new Date(r.timestamp).toLocaleString()}<br>
             <img src="${r.image}" style="width:100%;border-radius:10px;"><br>
-            <a class="btn view" href="recharge.html?uid=${r.userId}" target="_blank">🔍 View Recharge</a>
+         
             <button class="btn approve" onclick="approveRecharge('${r.userId}')">✅ Approve Recharge</button>
           </div>
         `;
