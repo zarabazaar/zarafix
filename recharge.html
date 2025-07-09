@@ -31,14 +31,14 @@
       display: inline-block;
       width: 100%;
       margin-top: 12px;
-      padding: 14px 18px;
-      font-size: 16px;
+      padding: 12px 16px;
+      font-size: 14px;
       font-weight: bold;
       border-radius: 12px;
       border: none;
       color: white;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s ease;
     }
     button:hover, .btn:hover {
@@ -50,30 +50,21 @@
     .orange-btn {
       background: linear-gradient(to right, #f39c12, #e67e22);
     }
-
     #scanner {
-      width: 250px;
+      width: 200px;
       border-radius: 12px;
       margin-top: 12px;
     }
-
     #preview {
       display: block;
       width: 100%;
       border-radius: 12px;
       margin-top: 12px;
     }
-
-    .download-btn {
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-    }
-
     .note {
-      font-size: 14px;
+      font-size: 13px;
       color: #777;
-      margin-top: 8px;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -82,11 +73,12 @@
 <div class="box" id="formBox">
   <h2>🔋 Recharge ₹100</h2>
 
-  <img id="scanner" src="https://i.ibb.co/C3JkFv4/Whats-App-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" alt="Scan QR to Pay">
-  
-  <!-- Download Button -->
-  <a class="btn orange-btn download-btn" href="https://i.ibb.co/C3JkFv4/Whats-App-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" download="ZaraFix-QR.jpg">📥 Download QR Code</a>
-  <div class="note">📌 Long press on QR to save in gallery (for mobile)</div>
+  <!-- ✅ Fixed image link -->
+  <img id="scanner" src="https://i.ibb.co/C3JkFv4/WhatsApp-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" alt="Scan QR to Pay">
+
+  <!-- 🔽 Smaller Download Button -->
+  <a class="btn orange-btn" style="width:150px; margin-top:10px;" href="https://i.ibb.co/C3JkFv4/WhatsApp-Image-2025-07-09-at-15-27-20-ba4874fa.jpg" download="ZaraFix-QR.jpg">📥 Save QR</a>
+  <div class="note">📌 Long press QR to save to gallery (on mobile)</div>
 
   <input type="text" id="name" placeholder="Your Name" required>
   <input type="text" id="whatsapp" placeholder="Your WhatsApp (10 digits)" required>
@@ -128,7 +120,6 @@
     } else {
       currentUser = user;
       const userId = user.uid;
-
       const snap = await db.ref("rechargeRequests/" + userId).once("value");
       if (snap.exists() && snap.val().status === "pending") {
         document.getElementById("formBox").style.display = "none";
@@ -164,7 +155,6 @@
     const btn = document.getElementById("submitBtn");
     btn.disabled = true;
     btn.innerText = "⏳ Submitting...";
-
     const name = document.getElementById("name").value.trim();
     let whatsapp = document.getElementById("whatsapp").value.trim();
     const imageFile = document.getElementById("image").files[0];
@@ -185,7 +175,6 @@
     }
 
     const userId = currentUser.uid;
-
     try {
       const snapshot = await db.ref("rechargeRequests/" + userId).once("value");
       if (snapshot.exists() && snapshot.val().status === "pending") {
@@ -196,12 +185,8 @@
       }
 
       const imageUrl = await uploadToImgBB(imageFile);
-
       await db.ref("rechargeRequests/" + userId).set({
-        userId,
-        name,
-        whatsapp,
-        amount: 100,
+        userId, name, whatsapp, amount: 100,
         status: "pending",
         timestamp: Date.now(),
         image: imageUrl
