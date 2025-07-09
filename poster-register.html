@@ -1,129 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🧰 ZaraFix - Poster Registration</title>
+  <title>🧰 Poster Registration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background: #f0f8ff;
       font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
       padding: 20px;
+    }
+    .box, .wait-box {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       text-align: center;
     }
-
-    h2 {
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    .input-field {
-      width: 80%;
-      max-width: 350px;
-      margin: 10px auto;
-      padding: 15px;
-      border-radius: 12px;
+    input, select {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
       font-size: 16px;
     }
-
-    .btn3d {
-      padding: 15px 30px;
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      background: linear-gradient(to right, #00b09b, #96c93d);
       color: white;
-      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      font-weight: bold;
       border: none;
-      border-radius: 18px;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
       cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-
-    .btn3d:hover {
-      transform: scale(1.05);
-    }
-
-    #msg {
-      color: red;
-      margin-top: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
   </style>
 </head>
 <body>
 
-  <h2>🧰 Service Provider Registration</h2>
-
-  <input class="input-field" id="name" placeholder="Your Name"><br>
-  <input class="input-field" id="shop" placeholder="Shop Name"><br>
-  <input class="input-field" id="address" placeholder="Address"><br>
-  <input class="input-field" id="whatsapp" placeholder="WhatsApp Number"><br>
-  
-  <select class="input-field" id="category">
+<!-- 📋 Poster Registration Form -->
+<div class="box" id="formBox">
+  <h2>🧰 Poster Registration</h2>
+  <input type="text" id="name" placeholder="Your Name" required>
+  <input type="text" id="shop" placeholder="Shop Name" required>
+  <input type="text" id="address" placeholder="Full Address" required>
+  <select id="category" required>
     <option value="">Select Category</option>
-    <option value="AC Repair">AC Repair</option>
-    <option value="Mobile Repair">Mobile Repair</option>
-    <option value="Plumber">Plumber</option>
-    <option value="Electrician">Electrician</option>
-    <option value="Computer Repair">Computer Repair</option>
-  </select><br>
+    <option>Fridge Repair</option>
+    <option>AC Repair</option>
+    <option>Plumber</option>
+    <option>Electrician</option>
+    <option>Carpenter</option>
+  </select>
+  <input type="text" id="whatsapp" placeholder="WhatsApp Number (10 digits)" required>
+  <button onclick="submitPosterRegistration()">📤 Submit Registration</button>
+</div>
 
-  <button class="btn3d" onclick="submitPosterForm()">✅ Register</button>
+<!-- ⏳ Waiting Box -->
+<div class="wait-box" id="waitingBox" style="display: none;">
+  <h2>⏳ Waiting for admin approval...</h2>
+  <p>Your request has been submitted.<br>Please wait for approval.</p>
+</div>
 
-  <p id="msg"></p>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
+  let currentUser = null;
 
-    function submitPosterForm() {
-      const name = document.getElementById("name").value.trim();
-      const shop = document.getElementById("shop").value.trim();
-      const address = document.getElementById("address").value.trim();
-      const whatsapp = document.getElementById("whatsapp").value.trim();
-      const category = document.getElementById("category").value;
+  auth.onAuthStateChanged(user => {
+    if (!user) return location.href = "index.html";
+    currentUser = user;
 
-      if (!name || !shop || !address || !whatsapp || !category) {
-        document.getElementById("msg").innerText = "⚠️ Please fill all fields.";
-        return;
-      }
-
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          const uid = user.uid;
-          const email = user.email;
-
-          firebase.database().ref("posters/" + uid).set({
-            name: name,
-            shop: shop,
-            address: address,
-            whatsapp: whatsapp,
-            category: category,
-            email: email
-          }).then(() => {
-            alert("✅ Registered Successfully!");
-            window.location.href = "poster-dashboard.html";
-          });
-        } else {
-          window.location.href = "login.html";
+    const uid = user.uid;
+    db.ref("posters/" + uid).once("value").then(snap => {
+      if (snap.exists()) {
+        const data = snap.val();
+        if (data.approved === false) {
+          document.getElementById("formBox").style.display = "none";
+          document.getElementById("waitingBox").style.display = "block";
         }
-      });
-    }
-  </script>
+      }
+    });
+  });
 
+  async function submitPosterRegistration() {
+    const name = document.getElementById("name").value.trim();
+    const shop = document.getElementById("shop").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const category = document.getElementById("category").value;
+    let whatsapp = document.getElementById("whatsapp").value.trim();
+
+    if (!name || !shop || !address || !category || !whatsapp) {
+      alert("⚠️ Please fill all fields.");
+      return;
+    }
+
+    whatsapp = whatsapp.replace(/\D/g, '');
+    if (whatsapp.length !== 10) {
+      alert("⚠️ Enter valid 10-digit WhatsApp number.");
+      return;
+    }
+
+    const userId = currentUser.uid;
+
+    await db.ref("posters/" + userId).set({
+      name,
+      shop,
+      address,
+      category,
+      whatsapp,
+      wallet: 100,
+      approved: false,
+      timestamp: Date.now()
+    });
+
+    document.getElementById("formBox").style.display = "none";
+    document.getElementById("waitingBox").style.display = "block";
+  }
+</script>
 </body>
 </html>
