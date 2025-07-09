@@ -11,12 +11,10 @@
       padding: 20px;
       text-align: center;
     }
-
     h2 {
       font-size: 22px;
       margin-bottom: 20px;
     }
-
     .box {
       max-width: 360px;
       margin: auto;
@@ -25,7 +23,6 @@
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-
     input {
       width: 100%;
       padding: 12px;
@@ -34,7 +31,6 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-
     .btn {
       width: 100%;
       padding: 14px;
@@ -48,11 +44,9 @@
       transition: transform 0.2s ease;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
-
     .btn:hover {
       transform: scale(1.03);
     }
-
     .green { background: linear-gradient(to right, #43cea2, #185a9d); }
     .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
   </style>
@@ -84,11 +78,17 @@
   };
   firebase.initializeApp(firebaseConfig);
 
+  // 🔄 Redirect after login
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      window.location.href = "welcome.html"; // ✅ redirect after login
+    }
+  });
+
   function login() {
     const email = document.getElementById("email").value.trim();
     const pass = document.getElementById("password").value.trim();
     firebase.auth().signInWithEmailAndPassword(email, pass)
-      .then(() => window.location.href = "welcome.html")
       .catch(err => alert("❌ " + err.message));
   }
 
@@ -96,14 +96,12 @@
     const email = document.getElementById("email").value.trim();
     const pass = document.getElementById("password").value.trim();
     firebase.auth().createUserWithEmailAndPassword(email, pass)
-      .then(() => window.location.href = "welcome.html")
       .catch(err => alert("❌ " + err.message));
   }
 
   function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
-      .then(() => window.location.href = "welcome.html")
       .catch(err => alert("❌ Google login failed: " + err.message));
   }
 </script>
