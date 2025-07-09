@@ -64,6 +64,10 @@
       font-size: 15px;
     }
 
+    #loginBtn {
+      display: none;
+    }
+
     @media (max-width: 500px) {
       .btn {
         font-size: 13px;
@@ -76,16 +80,16 @@
 
 <h2>👋 Welcome to <b>ZaraFix</b></h2>
 
-<!-- 🔘 Buttons in Rows -->
-<div class="button-grid">
+<!-- 🔘 Buttons -->
+<div class="button-grid" id="buttonGrid">
   <a class="btn green" href="service-request.html">📋 Service Request</a>
   <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
   <a class="btn red" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
   <a class="btn purple" href="#">🏠 Real Estate</a>
   <a class="btn orange" href="#">💍 Marriage Bureau</a>
   <a class="btn teal" href="#">🚑 Ambulance</a>
-  <button class="btn gray" id="logoutBtn" onclick="logout()">🚪 Logout</button>
-  <a class="btn green" id="loginBtn" href="index.html" style="display: none;">🔐 Login</a>
+  <button class="btn gray" onclick="logout()" id="logoutBtn">🚪 Logout</button>
+  <a class="btn green" id="loginBtn" href="index.html">🔐 Login</a>
 </div>
 
 <!-- 🔄 Poster Info Slider -->
@@ -113,6 +117,18 @@
 
   let posters = [];
   let current = 0;
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      // Logged in
+      document.getElementById("logoutBtn").style.display = "inline-block";
+      document.getElementById("loginBtn").style.display = "none";
+    } else {
+      // Not logged in
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("loginBtn").style.display = "inline-block";
+    }
+  });
 
   function showPoster(i) {
     const container = document.getElementById("posterCard");
@@ -148,18 +164,9 @@
     firebase.auth().signOut().then(() => {
       document.getElementById("logoutBtn").style.display = "none";
       document.getElementById("loginBtn").style.display = "inline-block";
+      document.getElementById("posterCard").innerHTML = "<p>Please login to view posters.</p>";
     });
   }
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById("logoutBtn").style.display = "inline-block";
-      document.getElementById("loginBtn").style.display = "none";
-    } else {
-      document.getElementById("logoutBtn").style.display = "none";
-      document.getElementById("loginBtn").style.display = "inline-block";
-    }
-  });
 </script>
 
 </body>
