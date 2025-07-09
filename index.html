@@ -1,125 +1,185 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix Login</title>
+  <title>ZaraFix - Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #e0f7fa, #ffffff);
-      margin: 0;
-      padding: 30px 20px;
+      background: #e3f2fd;
+      padding: 20px 10px;
       text-align: center;
     }
 
-    h2 {
-      margin-bottom: 30px;
-      font-size: 24px;
-      color: #333;
-    }
-
-    .input-box {
-      max-width: 350px;
-      margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    input {
-      width: 100%;
-      margin: 12px 0;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
+    .hidden { display: none; }
 
     .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 14px;
-      font-size: 16px;
+      display: inline-block;
+      margin: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
       font-weight: bold;
-      color: white;
-      background: linear-gradient(to right, #00c853, #64dd17);
+      color: #fff;
       border: none;
       border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
       cursor: pointer;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-      transition: transform 0.2s ease;
+      text-decoration: none;
+      transition: transform 0.2s;
+      min-width: 100px;
+      white-space: nowrap;
     }
 
-    .btn:hover {
-      transform: scale(1.05);
+    .btn:hover { transform: scale(1.05); }
+
+    .google { background: #db4437; }
+    .green { background: linear-gradient(to right, #43cea2, #185a9d); }
+    .blue { background: linear-gradient(to right, #00c6ff, #0072ff); }
+    .purple { background: linear-gradient(to right, #7F00FF, #E100FF); }
+    .orange { background: linear-gradient(to right, #f7971e, #ffd200); color: #000; }
+    .pink { background: linear-gradient(to right, #ff416c, #ff4b2b); }
+    .gray { background: #555; }
+    .logout { background: #333; }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
     }
 
-    .google-btn {
-      background: linear-gradient(to right, #4285F4, #0F9D58);
+    .logout-section {
+      margin-top: 20px;
     }
 
-    .note {
-      font-size: 14px;
-      color: #666;
+    .card {
+      margin: 20px auto 0;
+      padding: 16px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      text-align: left;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      color: #2c3e50;
+    }
+
+    .card p {
+      margin: 4px 0;
+      color: #444;
+      font-size: 15px;
+    }
+
+    #userInfo {
       margin-top: 10px;
+      font-size: 15px;
+      color: #333;
     }
   </style>
 </head>
 <body>
 
-<h2>🔐 Login to ZaraFix</h2>
+  <!-- 🔐 Login Section -->
+  <div id="loginSection">
+    <h2>🔐 Login to ZaraFix</h2>
+    <button class="btn google" onclick="googleLogin()">Login with Google</button>
+    <p id="msg" style="color: red;"></p>
+  </div>
 
-<div class="input-box">
-  <input type="email" id="email" placeholder="Enter email" required>
-  <input type="password" id="password" placeholder="Enter password" required>
-  <button class="btn" onclick="login()">📥 Login</button>
-  <button class="btn google-btn" onclick="googleLogin()">🔑 Login with Google</button>
-</div>
+  <!-- 👋 Welcome Section -->
+  <div id="welcomeSection" class="hidden">
+    <h2>👋 Welcome to <b>ZaraFix</b></h2>
+    <div id="userInfo">Checking login...</div>
 
-<div class="note">New user? Register from your role-specific page.</div>
+    <!-- Button Groups -->
+    <div class="btn-group">
+      <a class="btn green" href="service-request.html">📋 Service Request</a>
+      <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
+      <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+    </div>
+    <div class="btn-group">
+      <a class="btn orange" href="#">🏠 Real Estate</a>
+      <a class="btn pink" href="#">💍 Marriage Bureau</a>
+      <a class="btn gray" href="#">🚑 Ambulance</a>
+    </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Logout -->
+    <div class="logout-section">
+      <button class="btn logout" onclick="logout()">🚪 Logout</button>
+    </div>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-    authDomain: "zara-fix.firebaseapp.com",
-    projectId: "zara-fix",
-    storageBucket: "zara-fix.appspot.com",
-    messagingSenderId: "476473209200",
-    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-  };
-  firebase.initializeApp(firebaseConfig);
+    <!-- 🔁 Live Poster Card -->
+    <div id="posterCard" class="card hidden">
+      <h3>🔧 Your Service Info</h3>
+      <p><b>👤 Name:</b> <span id="posterName"></span></p>
+      <p><b>🏪 Shop:</b> <span id="posterShop"></span></p>
+      <p><b>📍 Address:</b> <span id="posterAddress"></span></p>
+    </div>
+  </div>
 
-  function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(() => {
-        alert("✅ Login successful");
-        window.location.href = "welcome.html";
-      })
-      .catch(error => {
-        alert("❌ " + error.message);
-      });
-  }
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+      projectId: "zara-fix",
+      storageBucket: "zara-fix.appspot.com",
+      messagingSenderId: "476473209200",
+      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-  function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then(() => {
-        alert("✅ Google login successful");
-        window.location.href = "welcome.html";
-      })
-      .catch(error => {
-        alert("❌ Google login failed: " + error.message);
-      });
-  }
-</script>
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("welcomeSection").style.display = "block";
+
+        document.getElementById("userInfo").innerHTML = `
+          👤 <b>${user.displayName || 'User'}</b><br>
+          📧 ${user.email}
+        `;
+
+        // Load poster data
+        db.ref("posters/" + user.uid).once("value").then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            document.getElementById("posterName").textContent = data.name || "N/A";
+            document.getElementById("posterShop").textContent = data.shop || "N/A";
+            document.getElementById("posterAddress").textContent = data.address || "N/A";
+            document.getElementById("posterCard").classList.remove("hidden");
+          }
+        });
+      } else {
+        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("welcomeSection").style.display = "none";
+      }
+    });
+
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .catch(error => {
+          document.getElementById("msg").innerText = error.message;
+        });
+    }
+
+    function logout() {
+      firebase.auth().signOut();
+    }
+  </script>
 
 </body>
 </html>
