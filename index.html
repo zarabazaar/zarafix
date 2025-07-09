@@ -15,22 +15,22 @@
 
     .btn {
       display: inline-block;
-      margin: 8px;
-      padding: 10px 16px;
-      font-size: 14px;
+      margin: 5px;
+      padding: 8px 10px;
+      font-size: 12px;
       font-weight: bold;
       color: #fff;
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       cursor: pointer;
       text-decoration: none;
       transition: transform 0.2s;
-      min-width: 100px;
+      min-width: 70px;
       white-space: nowrap;
     }
 
-    .btn:hover { transform: scale(1.05); }
+    .btn:hover { transform: scale(1.04); }
 
     .google { background: #db4437; }
     .green { background: linear-gradient(to right, #43cea2, #185a9d); }
@@ -45,20 +45,20 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .logout-section {
-      margin-top: 20px;
+      margin-top: 15px;
     }
 
     .card {
       margin: 20px auto 0;
-      padding: 16px;
+      padding: 14px;
       background: white;
-      border-radius: 14px;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       max-width: 400px;
       width: 90%;
       text-align: left;
@@ -72,7 +72,7 @@
     .card p {
       margin: 4px 0;
       color: #444;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     #userInfo {
@@ -84,102 +84,97 @@
 </head>
 <body>
 
-  <!-- 🔐 Login Section -->
-  <div id="loginSection">
-    <h2>🔐 Login to ZaraFix</h2>
-    <button class="btn google" onclick="googleLogin()">Login with Google</button>
-    <p id="msg" style="color: red;"></p>
+<!-- 🔐 Login Section -->
+<div id="loginSection">
+  <h2>Login to ZaraFix</h2>
+  <button class="btn google" onclick="googleLogin()">Login with Google</button>
+  <p id="msg" style="color: red;"></p>
+</div>
+
+<!-- 👋 Welcome Section -->
+<div id="welcomeSection" class="hidden">
+  <h2>Welcome to <b>ZaraFix</b></h2>
+  <div id="userInfo">Checking login...</div>
+
+  <div class="btn-group">
+    <a class="btn green" href="service-request.html">Service Request</a>
+    <a class="btn blue" href="poster-dashboard.html">Service Provider</a>
+    <a class="btn purple" href="admin-dashboard.html">Admin</a>
+    <a class="btn orange" href="#">Real Estate</a>
+    <a class="btn pink" href="#">Marriage</a>
+    <a class="btn gray" href="#">Ambulance</a>
   </div>
 
-  <!-- 👋 Welcome Section -->
-  <div id="welcomeSection" class="hidden">
-    <h2>👋 Welcome to <b>ZaraFix</b></h2>
-    <div id="userInfo">Checking login...</div>
-
-    <!-- Button Groups -->
-    <div class="btn-group">
-      <a class="btn green" href="service-request.html">📋 Service Request</a>
-      <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
-      <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
-    </div>
-    <div class="btn-group">
-      <a class="btn orange" href="#">🏠 Real Estate</a>
-      <a class="btn pink" href="#">💍 Marriage Bureau</a>
-      <a class="btn gray" href="#">🚑 Ambulance</a>
-    </div>
-
-    <!-- Logout -->
-    <div class="logout-section">
-      <button class="btn logout" onclick="logout()">🚪 Logout</button>
-    </div>
-
-    <!-- 🔁 Live Poster Card -->
-    <div id="posterCard" class="card hidden">
-      <h3>🔧 Your Service Info</h3>
-      <p><b>👤 Name:</b> <span id="posterName"></span></p>
-      <p><b>🏪 Shop:</b> <span id="posterShop"></span></p>
-      <p><b>📍 Address:</b> <span id="posterAddress"></span></p>
-    </div>
+  <div class="logout-section">
+    <button class="btn logout" onclick="logout()">Logout</button>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <div id="posterCards"></div>
+</div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    const auth = firebase.auth();
-    const db = firebase.database();
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("welcomeSection").style.display = "block";
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("welcomeSection").style.display = "block";
+      document.getElementById("userInfo").innerHTML = `
+        👤 <b>${user.displayName || 'User'}</b><br>
+        📧 ${user.email}
+      `;
+      loadPosters();
+    } else {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("welcomeSection").style.display = "none";
+    }
+  });
 
-        document.getElementById("userInfo").innerHTML = `
-          👤 <b>${user.displayName || 'User'}</b><br>
-          📧 ${user.email}
-        `;
-
-        // Load poster data
-        db.ref("posters/" + user.uid).once("value").then(snapshot => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            document.getElementById("posterName").textContent = data.name || "N/A";
-            document.getElementById("posterShop").textContent = data.shop || "N/A";
-            document.getElementById("posterAddress").textContent = data.address || "N/A";
-            document.getElementById("posterCard").classList.remove("hidden");
-          }
-        });
-      } else {
-        document.getElementById("loginSection").style.display = "block";
-        document.getElementById("welcomeSection").style.display = "none";
-      }
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).catch(error => {
+      document.getElementById("msg").innerText = error.message;
     });
+  }
 
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .catch(error => {
-          document.getElementById("msg").innerText = error.message;
-        });
-    }
+  function logout() {
+    firebase.auth().signOut();
+  }
 
-    function logout() {
-      firebase.auth().signOut();
-    }
-  </script>
+  function loadPosters() {
+    const container = document.getElementById("posterCards");
+    db.ref("posters").once("value").then(snapshot => {
+      container.innerHTML = "";
+      snapshot.forEach(child => {
+        const p = child.val();
+        container.innerHTML += `
+          <div class="card">
+            <h3>${p.shop || "Shop Name"}</h3>
+            <p><b>Name:</b> ${p.name || "N/A"}</p>
+            <p><b>Address:</b> ${p.address || "N/A"}</p>
+            <p><b>Category:</b> ${p.category || "N/A"}</p>
+            <p><b>WhatsApp:</b> <a href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a></p>
+          </div>
+        `;
+      });
+    });
+  }
+</script>
 
 </body>
 </html>
