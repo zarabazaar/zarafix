@@ -1,185 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Welcome</title>
+  <title>ZaraFix - Poster View</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #e3f2fd;
-      padding: 20px 10px;
+      padding: 10px;
       text-align: center;
     }
 
-    .hidden { display: none; }
-
     .btn {
-      display: inline-block;
-      margin: 8px;
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: bold;
-      color: #fff;
+      padding: 8px 12px;
+      font-size: 13px;
+      margin: 6px;
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.2s;
-      min-width: 100px;
-      white-space: nowrap;
+      min-width: 90px;
     }
 
-    .btn:hover { transform: scale(1.05); }
-
-    .google { background: #db4437; }
-    .green { background: linear-gradient(to right, #43cea2, #185a9d); }
-    .blue { background: linear-gradient(to right, #00c6ff, #0072ff); }
-    .purple { background: linear-gradient(to right, #7F00FF, #E100FF); }
-    .orange { background: linear-gradient(to right, #f7971e, #ffd200); color: #000; }
-    .pink { background: linear-gradient(to right, #ff416c, #ff4b2b); }
-    .gray { background: #555; }
-    .logout { background: #333; }
-
-    .btn-group {
+    .button-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
-      margin-top: 20px;
+      margin-bottom: 10px;
     }
 
-    .logout-section {
-      margin-top: 20px;
-    }
-
-    .card {
-      margin: 20px auto 0;
-      padding: 16px;
+    #cardContainer {
       background: white;
-      border-radius: 14px;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 90%;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      margin: 20px auto 0;
+      max-width: 340px;
+      min-height: 240px;
       text-align: left;
     }
 
-    .card h3 {
-      margin: 0 0 10px;
-      color: #2c3e50;
-    }
-
-    .card p {
-      margin: 4px 0;
-      color: #444;
-      font-size: 15px;
-    }
-
-    #userInfo {
-      margin-top: 10px;
+    .posterField {
+      margin: 6px 0;
       font-size: 15px;
       color: #333;
+    }
+
+    @media (max-width: 600px) {
+      .btn {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-width: 80px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔐 Login Section -->
-  <div id="loginSection">
-    <h2>🔐 Login to ZaraFix</h2>
-    <button class="btn google" onclick="googleLogin()">Login with Google</button>
-    <p id="msg" style="color: red;"></p>
-  </div>
+<h2>👋 Welcome to <b>ZaraFix</b></h2>
 
-  <!-- 👋 Welcome Section -->
-  <div id="welcomeSection" class="hidden">
-    <h2>👋 Welcome to <b>ZaraFix</b></h2>
-    <div id="userInfo">Checking login...</div>
+<!-- 🔘 Buttons Layout -->
+<div class="button-row">
+  <a class="btn" href="service-request.html">📋 Service Request</a>
+  <a class="btn" href="poster-dashboard.html">🧰 Service Provider</a>
+</div>
+<div class="button-row">
+  <a class="btn" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+  <a class="btn" href="#">🏠 Real Estate</a>
+  <a class="btn" href="#">💍 Marriage Bureau</a>
+</div>
+<div class="button-row">
+  <a class="btn" href="#">🚑 Ambulance</a>
+  <button class="btn" onclick="logout()">🚪 Logout</button>
+</div>
 
-    <!-- Button Groups -->
-    <div class="btn-group">
-      <a class="btn green" href="service-request.html">📋 Service Request</a>
-      <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
-      <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
-    </div>
-    <div class="btn-group">
-      <a class="btn orange" href="#">🏠 Real Estate</a>
-      <a class="btn pink" href="#">💍 Marriage Bureau</a>
-      <a class="btn gray" href="#">🚑 Ambulance</a>
-    </div>
+<!-- 🔄 Poster Card Slider -->
+<div id="cardContainer">
+  <p>Loading posters...</p>
+</div>
 
-    <!-- Logout -->
-    <div class="logout-section">
-      <button class="btn logout" onclick="logout()">🚪 Logout</button>
-    </div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    <!-- 🔁 Live Poster Card -->
-    <div id="posterCard" class="card hidden">
-      <h3>🔧 Your Service Info</h3>
-      <p><b>👤 Name:</b> <span id="posterName"></span></p>
-      <p><b>🏪 Shop:</b> <span id="posterShop"></span></p>
-      <p><b>📍 Address:</b> <span id="posterAddress"></span></p>
-    </div>
-  </div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+    authDomain: "zara-fix.firebaseapp.com",
+    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+    projectId: "zara-fix",
+    storageBucket: "zara-fix.appspot.com",
+    messagingSenderId: "476473209200",
+    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  let posters = [];
+  let currentIndex = 0;
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-      authDomain: "zara-fix.firebaseapp.com",
-      databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-      projectId: "zara-fix",
-      storageBucket: "zara-fix.appspot.com",
-      messagingSenderId: "476473209200",
-      appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-    };
-    firebase.initializeApp(firebaseConfig);
+  function showCard(index) {
+    const card = document.getElementById("cardContainer");
+    if (posters.length === 0) {
+      card.innerHTML = "<p>No posters found.</p>";
+      return;
+    }
+    const p = posters[index];
+    card.innerHTML = `
+      <div class="posterField"><b>Shop:</b> ${p.shop || "N/A"}</div>
+      <div class="posterField"><b>Name:</b> ${p.name || "N/A"}</div>
+      <div class="posterField"><b>Address:</b> ${p.address || "N/A"}</div>
+      <div class="posterField"><b>Category:</b> ${p.category || "N/A"}</div>
+    `;
+  }
 
-    const auth = firebase.auth();
-    const db = firebase.database();
+  function autoSlide() {
+    if (posters.length === 0) return;
+    currentIndex = (currentIndex + 1) % posters.length;
+    showCard(currentIndex);
+  }
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("welcomeSection").style.display = "block";
-
-        document.getElementById("userInfo").innerHTML = `
-          👤 <b>${user.displayName || 'User'}</b><br>
-          📧 ${user.email}
-        `;
-
-        // Load poster data
-        db.ref("posters/" + user.uid).once("value").then(snapshot => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            document.getElementById("posterName").textContent = data.name || "N/A";
-            document.getElementById("posterShop").textContent = data.shop || "N/A";
-            document.getElementById("posterAddress").textContent = data.address || "N/A";
-            document.getElementById("posterCard").classList.remove("hidden");
-          }
-        });
-      } else {
-        document.getElementById("loginSection").style.display = "block";
-        document.getElementById("welcomeSection").style.display = "none";
-      }
+  db.ref("posters").once("value").then(snapshot => {
+    snapshot.forEach(child => {
+      posters.push(child.val());
     });
+    showCard(currentIndex);
+    setInterval(autoSlide, 4000); // auto change every 4 seconds
+  });
 
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .catch(error => {
-          document.getElementById("msg").innerText = error.message;
-        });
-    }
-
-    function logout() {
-      firebase.auth().signOut();
-    }
-  </script>
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      location.href = "index.html";
+    });
+  }
+</script>
 
 </body>
 </html>
