@@ -84,7 +84,8 @@
   <a class="btn purple" href="#">🏠 Real Estate</a>
   <a class="btn orange" href="#">💍 Marriage Bureau</a>
   <a class="btn teal" href="#">🚑 Ambulance</a>
-  <button class="btn gray" onclick="logout()">🚪 Logout</button>
+  <button class="btn gray" id="logoutBtn" onclick="logout()">🚪 Logout</button>
+  <a class="btn green" id="loginBtn" href="index.html" style="display: none;">🔐 Login</a>
 </div>
 
 <!-- 🔄 Poster Info Slider -->
@@ -125,9 +126,6 @@
       <div class="field"><b>Name:</b> ${p.name || "N/A"}</div>
       <div class="field"><b>Address:</b> ${p.address || "N/A"}</div>
       <div class="field"><b>Category:</b> ${p.category || "N/A"}</div>
-
-
-      
     `;
   }
 
@@ -148,9 +146,20 @@
 
   function logout() {
     firebase.auth().signOut().then(() => {
-      location.href = "index.html";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("loginBtn").style.display = "inline-block";
     });
   }
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("logoutBtn").style.display = "inline-block";
+      document.getElementById("loginBtn").style.display = "none";
+    } else {
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("loginBtn").style.display = "inline-block";
+    }
+  });
 </script>
 
 </body>
