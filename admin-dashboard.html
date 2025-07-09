@@ -68,24 +68,20 @@
   <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
 </div>
 
-<!-- Clean Button -->
 <div style="text-align:center;">
   <button class="danger" onclick="cleanUpEmptyRequests()">🧹 Cleanup Invalid User Requests</button>
 </div>
 
-<!-- Posters -->
 <div id="posterSection" class="section">
   <h2>👷 Posters</h2>
   <div id="posterList" class="grid"></div>
 </div>
 
-<!-- Users -->
 <div id="userSection" class="section active">
   <h2>🧑‍💻 Users - Service Requests</h2>
   <div id="userList" class="grid"></div>
 </div>
 
-<!-- Recharge -->
 <div id="rechargeRequestSection" class="section">
   <h2>🔋 Recharge Requests</h2>
   <div id="rechargeList" class="grid"></div>
@@ -95,8 +91,15 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script>
-// Firebase Init
-const firebaseConfig = { apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E", authDomain: "zara-fix.firebaseapp.com", databaseURL: "https://zara-fix-default-rtdb.firebaseio.com", projectId: "zara-fix", storageBucket: "zara-fix.appspot.com", messagingSenderId: "476473209200", appId: "1:476473209200:web:9f6efe6c32fd4248949fb5" };
+const firebaseConfig = {
+  apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+  authDomain: "zara-fix.firebaseapp.com",
+  databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
+  projectId: "zara-fix",
+  storageBucket: "zara-fix.appspot.com",
+  messagingSenderId: "476473209200",
+  appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
@@ -222,11 +225,13 @@ function deletePoster(uid) {
 
 function loadRechargeRequests() {
   const list = document.getElementById("rechargeList");
+  let pending = false;
   db.ref("rechargeRequests").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const r = child.val();
       if (r.status === "pending") {
+        pending = true;
         list.innerHTML += `
           <div class="card">
             <strong>${r.name}</strong><br>
@@ -240,6 +245,15 @@ function loadRechargeRequests() {
         `;
       }
     });
+    const btn = document.querySelector('button[onclick*="rechargeRequestSection"]');
+    let led = document.getElementById("rechargeLed");
+    if (!led) {
+      led = document.createElement("span");
+      led.id = "rechargeLed";
+      led.className = "led";
+      btn.appendChild(led);
+    }
+    led.style.display = pending ? "inline-block" : "none";
   });
 }
 
