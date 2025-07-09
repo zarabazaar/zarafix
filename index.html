@@ -7,72 +7,73 @@
     body {
       font-family: Arial, sans-serif;
       background: #e3f2fd;
-      padding: 20px 10px;
+      padding: 10px;
       text-align: center;
     }
 
     .hidden { display: none; }
 
     .btn {
-      display: inline-block;
-      margin: 5px;
-      padding: 8px 10px;
-      font-size: 12px;
+      padding: 10px;
+      font-size: 14px;
       font-weight: bold;
       color: #fff;
       border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border-radius: 12px;
+      margin: 6px;
+      min-width: 100px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       cursor: pointer;
-      text-decoration: none;
       transition: transform 0.2s;
-      min-width: 70px;
-      white-space: nowrap;
     }
 
-    .btn:hover { transform: scale(1.04); }
+    .btn:hover { transform: scale(1.05); }
 
-    .google { background: #db4437; }
-    .green { background: linear-gradient(to right, #43cea2, #185a9d); }
-    .blue { background: linear-gradient(to right, #00c6ff, #0072ff); }
+    .red { background: linear-gradient(to right, #ff416c, #ff4b2b); }
+    .green { background: linear-gradient(to right, #56ab2f, #a8e063); }
+    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
     .purple { background: linear-gradient(to right, #7F00FF, #E100FF); }
-    .orange { background: linear-gradient(to right, #f7971e, #ffd200); color: #000; }
-    .pink { background: linear-gradient(to right, #ff416c, #ff4b2b); }
+    .orange { background: linear-gradient(to right, #f7971e, #ffd200); color: black; }
     .gray { background: #555; }
-    .logout { background: #333; }
 
-    .btn-group {
+    .button-row {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 6px;
-      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0;
     }
 
     .logout-section {
-      margin-top: 15px;
+      margin-top: 12px;
     }
 
-    .card {
-      margin: 20px auto 0;
-      padding: 14px;
+    .card-wrapper {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 90%;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      margin-top: 20px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
       text-align: left;
+      overflow-y: auto;
+      max-height: 500px;
     }
 
-    .card h3 {
-      margin: 0 0 10px;
-      color: #2c3e50;
+    .poster-item {
+      background: #f1f1f1;
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
 
-    .card p {
+    .poster-item p {
       margin: 4px 0;
-      color: #444;
       font-size: 14px;
+      color: #333;
     }
 
     #userInfo {
@@ -87,7 +88,7 @@
 <!-- 🔐 Login Section -->
 <div id="loginSection">
   <h2>Login to ZaraFix</h2>
-  <button class="btn google" onclick="googleLogin()">Login with Google</button>
+  <button class="btn red" onclick="googleLogin()">Login with Google</button>
   <p id="msg" style="color: red;"></p>
 </div>
 
@@ -96,23 +97,33 @@
   <h2>Welcome to <b>ZaraFix</b></h2>
   <div id="userInfo">Checking login...</div>
 
-  <div class="btn-group">
+  <!-- 🔼 2 buttons -->
+  <div class="button-row">
     <a class="btn green" href="service-request.html">Service Request</a>
-    <a class="btn blue" href="poster-dashboard.html">Service Provider</a>
+    <a class="btn blue" href="poster-dashboard.html">Provider</a>
+  </div>
+
+  <!-- 🔽 3 buttons -->
+  <div class="button-row">
     <a class="btn purple" href="admin-dashboard.html">Admin</a>
     <a class="btn orange" href="#">Real Estate</a>
-    <a class="btn pink" href="#">Marriage</a>
     <a class="btn gray" href="#">Ambulance</a>
   </div>
 
-  <div class="logout-section">
-    <button class="btn logout" onclick="logout()">Logout</button>
+  <!-- ⬇️ 2 buttons -->
+  <div class="button-row">
+    <a class="btn orange" href="#">Marriage</a>
+    <button class="btn red" onclick="logout()">Logout</button>
   </div>
 
-  <div id="posterCards"></div>
+  <!-- 🧾 Poster Card -->
+  <div class="card-wrapper" id="posterCards">
+    <h3>🔧 All Posters</h3>
+    <!-- Live poster data will be added here -->
+  </div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -147,9 +158,10 @@
 
   function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(error => {
-      document.getElementById("msg").innerText = error.message;
-    });
+    firebase.auth().signInWithPopup(provider)
+      .catch(error => {
+        document.getElementById("msg").innerText = error.message;
+      });
   }
 
   function logout() {
@@ -159,12 +171,12 @@
   function loadPosters() {
     const container = document.getElementById("posterCards");
     db.ref("posters").once("value").then(snapshot => {
-      container.innerHTML = "";
+      container.innerHTML += "<hr>";
       snapshot.forEach(child => {
         const p = child.val();
         container.innerHTML += `
-          <div class="card">
-            <h3>${p.shop || "Shop Name"}</h3>
+          <div class="poster-item">
+            <p><b>Shop:</b> ${p.shop || "N/A"}</p>
             <p><b>Name:</b> ${p.name || "N/A"}</p>
             <p><b>Address:</b> ${p.address || "N/A"}</p>
             <p><b>Category:</b> ${p.category || "N/A"}</p>
