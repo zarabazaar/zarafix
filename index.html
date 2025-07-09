@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Login + Welcome</title>
+  <title>ZaraFix - Welcome</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #e3f2fd;
-      padding: 30px 10px;
+      padding: 20px 10px;
       text-align: center;
     }
 
@@ -26,8 +26,7 @@
       cursor: pointer;
       text-decoration: none;
       transition: transform 0.2s;
-      min-width: 140px;
-      max-width: 100%;
+      min-width: 100px;
       white-space: nowrap;
     }
 
@@ -42,12 +41,6 @@
     .gray { background: #555; }
     .logout { background: #333; }
 
-    #userInfo {
-      margin-top: 20px;
-      font-size: 15px;
-      color: #333;
-    }
-
     .btn-group {
       display: flex;
       flex-wrap: wrap;
@@ -56,10 +49,36 @@
       margin-top: 20px;
     }
 
-    .logo {
-      margin-top: 30px;
-      width: 140px;
-      border-radius: 12px;
+    .logout-section {
+      margin-top: 20px;
+    }
+
+    .card {
+      margin: 20px auto 0;
+      padding: 16px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      text-align: left;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      color: #2c3e50;
+    }
+
+    .card p {
+      margin: 4px 0;
+      color: #444;
+      font-size: 15px;
+    }
+
+    #userInfo {
+      margin-top: 10px;
+      font-size: 15px;
+      color: #333;
     }
   </style>
 </head>
@@ -77,30 +96,36 @@
     <h2>👋 Welcome to <b>ZaraFix</b></h2>
     <div id="userInfo">Checking login...</div>
 
-    <!-- 2 rows of buttons -->
+    <!-- Button Groups -->
     <div class="btn-group">
       <a class="btn green" href="service-request.html">📋 Service Request</a>
       <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
       <a class="btn purple" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
     </div>
-
     <div class="btn-group">
       <a class="btn orange" href="#">🏠 Real Estate</a>
       <a class="btn pink" href="#">💍 Marriage Bureau</a>
-      <a class="btn gray" href="#">🚑 Ambulance Booking</a>
+      <a class="btn gray" href="#">🚑 Ambulance</a>
     </div>
 
-    <br>
-    <button class="btn logout" onclick="logout()">🚪 Logout</button>
+    <!-- Logout -->
+    <div class="logout-section">
+      <button class="btn logout" onclick="logout()">🚪 Logout</button>
+    </div>
 
-    <!-- ZaraFix Logo -->
-    <br><br>
-    <img class="logo" src="https://i.ibb.co/jDZMg4H/zarafix-logo.png" alt="ZaraFix Logo">
+    <!-- 🔁 Live Poster Card -->
+    <div id="posterCard" class="card hidden">
+      <h3>🔧 Your Service Info</h3>
+      <p><b>👤 Name:</b> <span id="posterName"></span></p>
+      <p><b>🏪 Shop:</b> <span id="posterShop"></span></p>
+      <p><b>📍 Address:</b> <span id="posterAddress"></span></p>
+    </div>
   </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -114,14 +139,29 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    firebase.auth().onAuthStateChanged(user => {
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById("loginSection").style.display = "none";
         document.getElementById("welcomeSection").style.display = "block";
+
         document.getElementById("userInfo").innerHTML = `
           👤 <b>${user.displayName || 'User'}</b><br>
           📧 ${user.email}
         `;
+
+        // Load poster data
+        db.ref("posters/" + user.uid).once("value").then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            document.getElementById("posterName").textContent = data.name || "N/A";
+            document.getElementById("posterShop").textContent = data.shop || "N/A";
+            document.getElementById("posterAddress").textContent = data.address || "N/A";
+            document.getElementById("posterCard").classList.remove("hidden");
+          }
+        });
       } else {
         document.getElementById("loginSection").style.display = "block";
         document.getElementById("welcomeSection").style.display = "none";
@@ -140,5 +180,6 @@
       firebase.auth().signOut();
     }
   </script>
+
 </body>
 </html>
