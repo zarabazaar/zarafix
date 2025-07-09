@@ -61,6 +61,9 @@
       color: green;
       text-decoration: underline;
     }
+    #googleLoginBtn {
+      background: linear-gradient(to right, #4285F4, #0F9D58);
+    }
   </style>
 </head>
 <body>
@@ -68,13 +71,15 @@
 <div class="container">
   <h2>ZaraFix - Service Request</h2>
 
-  <div id="pleaseLogin" class="hidden">
+  <div id="pleaseLogin">
     <p style="text-align:center; color:red;">🚫 Please login first.</p>
+    <button id="googleLoginBtn" onclick="googleLogin()">🔐 Login with Google</button>
   </div>
 
   <div id="mainSection" class="hidden">
     <button onclick="toggleForm()">📝 Fill Form</button>
     <button onclick="toggleDashboard()">📋 Dashboard</button>
+    <button onclick="logout()">🚪 Logout</button>
 
     <form id="serviceForm" class="hidden">
       <input type="text" id="name" placeholder="Your Name" required>
@@ -121,7 +126,6 @@
   const serviceForm = document.getElementById('serviceForm');
   const dashboard = document.getElementById('dashboard');
   const requestList = document.getElementById('requestList');
-
   let currentUserId = null;
 
   firebase.auth().onAuthStateChanged(user => {
@@ -135,6 +139,15 @@
       pleaseLogin.classList.remove("hidden");
     }
   });
+
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).catch(err => alert("❌ " + err.message));
+  }
+
+  function logout() {
+    firebase.auth().signOut();
+  }
 
   function toggleForm() {
     serviceForm.classList.toggle("hidden");
@@ -160,7 +173,7 @@
       issue: document.getElementById("issue").value,
       whatsapp: document.getElementById("whatsapp").value,
       timestamp: new Date().toLocaleString(),
-      acceptedBy: {}  // Will store service provider info
+      acceptedBy: {}
     };
 
     firebase.database().ref("requests").push(data).then(() => {
@@ -179,7 +192,6 @@
           const card = document.createElement("div");
           card.className = "card";
 
-          // Accepted Section
           let acceptedHTML = `<i>No one accepted yet.</i>`;
           const acceptedBy = req.acceptedBy || {};
           const acceptedKeys = Object.keys(acceptedBy);
@@ -206,7 +218,6 @@
             <small>${req.timestamp}</small><br><br>
             ${acceptedHTML}
           `;
-
           requestList.appendChild(card);
         });
       } else {
