@@ -6,54 +6,68 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #e3f2fd;
-      padding: 10px;
+      background: linear-gradient(to bottom, #e3f2fd, #ffffff);
+      margin: 0;
+      padding: 20px 10px;
       text-align: center;
     }
 
-    .btn {
-      padding: 8px 12px;
-      font-size: 13px;
-      margin: 6px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(to right, #4CAF50, #2E7D32);
-      color: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      cursor: pointer;
-      min-width: 90px;
+    h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
     }
 
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 30px;
+      padding: 0 10px;
     }
 
-    #cardContainer {
+    .btn {
+      padding: 12px;
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
+    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
+    .red { background: linear-gradient(to right, #f44336, #b71c1c); }
+    .purple { background: linear-gradient(to right, #9c27b0, #6a1b9a); }
+    .orange { background: linear-gradient(to right, #ff9800, #e65100); }
+    .teal { background: linear-gradient(to right, #009688, #004d40); }
+    .gray { background: linear-gradient(to right, #616161, #212121); }
+
+    #posterCard {
+      max-width: 360px;
+      margin: auto;
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       padding: 20px;
-      margin: 20px auto 0;
-      max-width: 340px;
-      min-height: 240px;
+      border-radius: 18px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
       text-align: left;
     }
 
-    .posterField {
-      margin: 6px 0;
+    .field {
+      margin-bottom: 10px;
       font-size: 15px;
-      color: #333;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 500px) {
       .btn {
-        padding: 8px 10px;
-        font-size: 12px;
-        min-width: 80px;
+        font-size: 13px;
+        padding: 10px;
       }
     }
   </style>
@@ -62,23 +76,18 @@
 
 <h2>👋 Welcome to <b>ZaraFix</b></h2>
 
-<!-- 🔘 Buttons Layout -->
-<div class="button-row">
-  <a class="btn" href="service-request.html">📋 Service Request</a>
-  <a class="btn" href="poster-dashboard.html">🧰 Service Provider</a>
-</div>
-<div class="button-row">
-  <a class="btn" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
-  <a class="btn" href="#">🏠 Real Estate</a>
-  <a class="btn" href="#">💍 Marriage Bureau</a>
-</div>
-<div class="button-row">
-  <a class="btn" href="#">🚑 Ambulance</a>
-  <button class="btn" onclick="logout()">🚪 Logout</button>
+<div class="button-grid">
+  <a class="btn green" href="service-request.html">📋 Service Request</a>
+  <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
+  <a class="btn red" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+  <a class="btn purple" href="#">🏠 Real Estate</a>
+  <a class="btn orange" href="#">💍 Marriage Bureau</a>
+  <a class="btn teal" href="#">🚑 Ambulance</a>
+  <button class="btn gray" onclick="logout()">🚪 Logout</button>
 </div>
 
-<!-- 🔄 Poster Card Slider -->
-<div id="cardContainer">
+<!-- 🔄 Poster Info Slider -->
+<div id="posterCard">
   <p>Loading posters...</p>
 </div>
 
@@ -99,42 +108,46 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  const auth = firebase.auth();
 
   let posters = [];
-  let currentIndex = 0;
+  let current = 0;
 
-  function showCard(index) {
-    const card = document.getElementById("cardContainer");
-    if (posters.length === 0) {
-      card.innerHTML = "<p>No posters found.</p>";
+  function showPoster(i) {
+    const container = document.getElementById("posterCard");
+    if (!posters.length) {
+      container.innerHTML = "<p>No poster data found.</p>";
       return;
     }
-    const p = posters[index];
-    card.innerHTML = `
-      <div class="posterField"><b>Shop:</b> ${p.shop || "N/A"}</div>
-      <div class="posterField"><b>Name:</b> ${p.name || "N/A"}</div>
-      <div class="posterField"><b>Address:</b> ${p.address || "N/A"}</div>
-      <div class="posterField"><b>Category:</b> ${p.category || "N/A"}</div>
+    const p = posters[i];
+    container.innerHTML = `
+      <div class="field"><b>Shop:</b> ${p.shop || "N/A"}</div>
+      <div class="field"><b>Name:</b> ${p.name || "N/A"}</div>
+      <div class="field"><b>Address:</b> ${p.address || "N/A"}</div>
     `;
-  }
-
-  function autoSlide() {
-    if (posters.length === 0) return;
-    currentIndex = (currentIndex + 1) % posters.length;
-    showCard(currentIndex);
   }
 
   db.ref("posters").once("value").then(snapshot => {
     snapshot.forEach(child => {
       posters.push(child.val());
     });
-    showCard(currentIndex);
-    setInterval(autoSlide, 4000); // auto change every 4 seconds
+    if (posters.length) {
+      showPoster(current);
+      setInterval(() => {
+        current = (current + 1) % posters.length;
+        showPoster(current);
+      }, 4000);
+    } else {
+      document.getElementById("posterCard").innerHTML = "<p>No posters found.</p>";
+    }
   });
 
+  // ✅ Working Logout Function
   function logout() {
-    firebase.auth().signOut().then(() => {
-      location.href = "index.html";
+    auth.signOut().then(() => {
+      window.location.href = "index.html";
+    }).catch(err => {
+      alert("Logout failed: " + err.message);
     });
   }
 </script>
