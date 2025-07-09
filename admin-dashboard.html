@@ -15,6 +15,20 @@
       color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       cursor: pointer; position: relative;
     }
+    .led {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
     .section { display: none; }
     .active { display: block; }
     .grid {
@@ -43,10 +57,9 @@
 <h1>👑 ZaraFix Admin Dashboard</h1>
 
 <div class="nav">
-  <button onclick="showSection('posterSection')">👷 Posters</button>
+  <button onclick="showSection('posterSection')">👷 Posters <span id="posterLed" class="led" style="display:none;"></span></button>
   <button onclick="showSection('userSection')">🧑‍💻 Users</button>
-  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
-
+  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests <span id="rechargeLed" class="led" style="display:none;"></span></button>
 </div>
 
 <div style="text-align:center;">
@@ -156,13 +169,17 @@ function cleanUpOldRequests() {
 
 function loadPosters() {
   const list = document.getElementById("posterList");
+  let unapprovedFound = false;
   db.ref("posters").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const p = child.val();
       const uid = child.key;
+      const notApproved = !p.approved;
+      if (notApproved) unapprovedFound = true;
       list.innerHTML += `
         <div class="card">
+          ${notApproved ? `<span class="led" style="top:10px; right:10px;"></span>` : ""}
           <strong>${p.name}</strong><br>
           🔑 UID: <code>${uid}</code><br>
           🏪 ${p.shop}<br>
@@ -176,6 +193,7 @@ function loadPosters() {
         </div>
       `;
     });
+    document.getElementById("posterLed").style.display = unapprovedFound ? "inline-block" : "none";
   });
 }
 
@@ -191,11 +209,13 @@ function deletePoster(uid) {
 
 function loadRechargeRequests() {
   const list = document.getElementById("rechargeList");
+  let anyPending = false;
   db.ref("rechargeRequests").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const r = child.val();
       if (r.status === "pending") {
+        anyPending = true;
         list.innerHTML += `
           <div class="card">
             <strong>${r.name}</strong><br>
@@ -209,6 +229,7 @@ function loadRechargeRequests() {
         `;
       }
     });
+    document.getElementById("rechargeLed").style.display = anyPending ? "inline-block" : "none";
   });
 }
 
