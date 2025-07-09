@@ -18,7 +18,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       text-align: center;
     }
-    input, button {
+    input {
       width: 100%;
       margin-top: 12px;
       padding: 12px;
@@ -27,22 +27,41 @@
       font-size: 16px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
-    button {
-      background: linear-gradient(to right, #00c853, #64dd17);
-      color: white;
+    button, .btn {
+      display: inline-block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px 18px;
+      font-size: 16px;
       font-weight: bold;
+      border-radius: 12px;
       border: none;
+      color: white;
       cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s ease;
     }
+    button:hover, .btn:hover {
+      transform: scale(1.03);
+    }
+
+    .green-btn {
+      background: linear-gradient(to right, #00c853, #64dd17);
+    }
+    .orange-btn {
+      background: linear-gradient(to right, #f39c12, #e67e22);
+    }
+
     #preview, #scanner {
       display: block;
       width: 100%;
       border-radius: 12px;
       margin-top: 12px;
     }
-    .download-btn {
-      margin-top: 10px;
-      background: linear-gradient(to right, #f39c12, #e67e22);
+
+    a.download-btn {
+      text-decoration: none;
+      color: white;
     }
   </style>
 </head>
@@ -52,23 +71,24 @@
 <div class="box" id="formBox">
   <h2>🔋 Recharge ₹100</h2>
   <img id="scanner" src="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" alt="Scan QR to Pay">
-  <a class="download-btn" href="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" download>
-    📥 Download QR to Pay via UPI
-  </a>
+  
+  <!-- 3D Download Button -->
+  <a href="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" download class="btn orange-btn download-btn">📥 Download QR Code</a>
+
   <input type="text" id="name" placeholder="Your Name" required>
   <input type="text" id="whatsapp" placeholder="Your WhatsApp (10 digits)" required>
   <input type="file" id="image" accept="image/*" required>
   <img id="preview" alt="Screenshot Preview" style="display:none" />
-  <button id="submitBtn" onclick="submitRecharge()">📤 Submit Recharge</button>
+  <button id="submitBtn" class="green-btn" onclick="submitRecharge()">📤 Submit Recharge</button>
 </div>
 
-<!-- Waiting Message -->
+<!-- Waiting Box -->
 <div class="wait-box" id="waitingBox" style="display: none;">
   <h2>⏳ Please wait for recharge approval...</h2>
   <p>Your request has been submitted.<br>Recharge will be added after admin approval.</p>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -97,7 +117,6 @@
       currentUser = user;
       const userId = user.uid;
 
-      // Check if recharge already submitted
       const snap = await db.ref("rechargeRequests/" + userId).once("value");
       if (snap.exists() && snap.val().status === "pending") {
         document.getElementById("formBox").style.display = "none";
@@ -177,7 +196,6 @@
         image: imageUrl
       });
 
-      // WhatsApp to Admin
       const message = `*🔋 Recharge Request*\n👤 Name: ${name}\n📞 WhatsApp: ${whatsapp}\n💰 ₹100\n🆔 UID: ${userId}\n🖼 Screenshot: ${imageUrl}`;
       window.open("https://wa.me/918806940156?text=" + encodeURIComponent(message), "_blank");
 
