@@ -16,14 +16,8 @@
       cursor: pointer; position: relative;
     }
     .led {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      width: 10px;
-      height: 10px;
-      background: red;
-      border-radius: 50%;
-      animation: blink 1s infinite;
+      position: absolute; top: 5px; right: 5px; width: 10px; height: 10px;
+      background: red; border-radius: 50%; animation: blink 1s infinite;
     }
     @keyframes blink {
       0%, 100% { opacity: 1; }
@@ -36,13 +30,7 @@
     }
     .card {
       background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      padding: 16px; width: 90%; max-width: 340px;
-      position: relative;
-    }
-    .card .led {
-      position: absolute;
-      top: 8px;
-      left: 8px;
+      padding: 16px; width: 90%; max-width: 340px; position: relative;
     }
     .btn {
       padding: 10px 14px; margin: 8px 4px 0 0;
@@ -132,13 +120,13 @@ function loadUsers() {
       const userRequests = userSnap.val();
       if (userRequests && typeof userRequests === 'object') {
         Object.entries(userRequests).forEach(([requestId, req]) => {
-          if (!req || !req.whatsapp || !req.address) return;
+          if (!req) return;
           const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
           list.innerHTML += `
             <div class="card">
               <strong>${req.name || "Unnamed"}</strong><br>
               🆔 UID: <code>${req.userId || userId}</code><br>
-              📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
+              📞 ${req.whatsapp ? `<a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a>` : "N/A"}<br>
               📍 ${req.address || "N/A"}<br>
               🏙️ ${req.city || "N/A"}<br>
               📮 ${req.pincode || "N/A"}<br>
@@ -175,9 +163,7 @@ function cleanUpEmptyRequests() {
       const userRequests = userSnap.val();
       if (userRequests && typeof userRequests === 'object') {
         Object.entries(userRequests).forEach(([requestId, req]) => {
-          if (!req || !req.whatsapp || !req.address) {
-            db.ref(`requests/${userId}/${requestId}`).remove();
-          }
+          if (!req) db.ref(`requests/${userId}/${requestId}`).remove();
         });
       }
     });
