@@ -65,7 +65,7 @@
 <div class="nav">
   <button onclick="showSection('posterSection')">👷 Posters <span id="posterLed" class="led" style="display:none;"></span></button>
   <button onclick="showSection('userSection')">🧑‍💻 Users</button>
-  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
+  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests <span id="rechargeLed" class="led" style="display:none;"></span></button>
 </div>
 
 <div style="text-align:center;">
@@ -137,11 +137,14 @@ function loadUsers() {
           list.innerHTML += `
             <div class="card">
               <strong>${req.name || "Unnamed"}</strong><br>
+              🆔 UID: <code>${req.userId || userId}</code><br>
               📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
               📍 ${req.address}<br>
+              🏙️ ${req.city || "N/A"}<br>
+              📮 ${req.pincode || "N/A"}<br>
               🔧 ${req.category}<br>
               📋 ${req.issue || "No issue provided"}<br>
-              🕒 ${new Date(req.timestamp).toLocaleString()}<br>
+              🕒 ${req.timestamp}<br>
               👷 Accepted By: ${accepted}<br>
               <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
               <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
@@ -245,15 +248,7 @@ function loadRechargeRequests() {
         `;
       }
     });
-    const btn = document.querySelector('button[onclick*="rechargeRequestSection"]');
-    let led = document.getElementById("rechargeLed");
-    if (!led) {
-      led = document.createElement("span");
-      led.id = "rechargeLed";
-      led.className = "led";
-      btn.appendChild(led);
-    }
-    led.style.display = pending ? "inline-block" : "none";
+    document.getElementById("rechargeLed").style.display = pending ? "inline-block" : "none";
   });
 }
 
@@ -268,6 +263,5 @@ function approveRecharge(uid) {
   });
 }
 </script>
-
 </body>
 </html>
