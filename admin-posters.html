@@ -10,11 +10,11 @@
       padding: 20px;
     }
     .card {
-      background: #fff;
+      background: white;
       padding: 15px;
       margin: 15px 0;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
       transition: 0.3s ease;
     }
     .card:hover {
@@ -31,16 +31,15 @@
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.2s ease;
     }
     .recharge-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
     }
     .wallet-status {
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 14px;
-      color: #444;
+      color: #333;
     }
   </style>
 </head>
@@ -48,7 +47,7 @@
   <h2>🛠️ All Posters (Service Providers)</h2>
   <div id="posters"></div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -68,8 +67,8 @@
     function rechargeWallet(uid, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
       walletRef.once("value").then(snap => {
-        let current = snap.val() || 0;
-        let updated = current + 100;
+        const current = snap.val() || 0;
+        const updated = current + 100;
         walletRef.set(updated).then(() => {
           document.getElementById(statusId).innerText = `✅ Wallet: ₹${updated}`;
         });
@@ -79,27 +78,31 @@
     db.ref("posters").once("value", snapshot => {
       const postersDiv = document.getElementById("posters");
 
+      if (!snapshot.exists()) {
+        postersDiv.innerHTML = "<p>No posters found.</p>";
+        return;
+      }
+
       snapshot.forEach(child => {
-        const poster = child.val();
+        const data = child.val();
         const uid = child.key;
         const statusId = "wallet-" + uid;
 
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-          <b>${poster.name || "No Name"}</b> (${poster.category || "N/A"})<br>
-          📞 WhatsApp: ${poster.whatsapp || "Not provided"}<br>
-          🏠 Address: ${poster.address || "N/A"}<br>
-          <small>UID: ${uid}</small><br>
-          <div class="wallet-status" id="${statusId}">Loading wallet...</div>
+          <b>${data.name || "No Name"}</b> (${data.category || "N/A"})<br>
+          📞 ${data.whatsapp || "Not Provided"}<br>
+          🏠 ${data.address || "No Address"}<br>
+          <div class="wallet-status" id="${statusId}">💼 Loading...</div>
           <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
         `;
         postersDiv.appendChild(card);
 
-        // Load wallet value
+        // load wallet
         db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
-          const val = wSnap.val() || 0;
-          document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
+          const wallet = wSnap.val() || 0;
+          document.getElementById(statusId).innerText = `💼 Wallet: ₹${wallet}`;
         });
       });
     });
