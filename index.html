@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Welcome</title>
+  <title>ZaraFix - Poster Slider</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -11,121 +11,64 @@
       text-align: center;
     }
 
-    .hidden { display: none; }
-
     .btn {
-      padding: 10px;
+      padding: 10px 16px;
       font-size: 14px;
-      font-weight: bold;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
       margin: 6px;
-      min-width: 100px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #4CAF50, #2E7D32);
+      color: white;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       cursor: pointer;
-      transition: transform 0.2s;
     }
 
-    .btn:hover { transform: scale(1.05); }
-
-    .red { background: linear-gradient(to right, #ff416c, #ff4b2b); }
-    .green { background: linear-gradient(to right, #56ab2f, #a8e063); }
-    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
-    .purple { background: linear-gradient(to right, #7F00FF, #E100FF); }
-    .orange { background: linear-gradient(to right, #f7971e, #ffd200); color: black; }
-    .gray { background: #555; }
-
-    .button-row {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 10px 0;
-    }
-
-    .logout-section {
-      margin-top: 12px;
-    }
-
-    .card-wrapper {
+    #cardContainer {
       background: white;
       border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      padding: 20px;
       margin-top: 20px;
-      max-width: 500px;
+      max-width: 360px;
       margin-left: auto;
       margin-right: auto;
       text-align: left;
-      overflow-y: auto;
-      max-height: 500px;
+      min-height: 250px;
     }
 
-    .poster-item {
-      background: #f1f1f1;
-      margin-bottom: 14px;
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-
-    .poster-item p {
-      margin: 4px 0;
-      font-size: 14px;
-      color: #333;
-    }
-
-    #userInfo {
-      margin-top: 10px;
+    .posterField {
+      margin: 6px 0;
       font-size: 15px;
       color: #333;
+    }
+
+    .navButtons {
+      display: flex;
+      justify-content: space-between;
+      max-width: 360px;
+      margin: 20px auto 0;
+    }
+
+    .posterLink {
+      color: #0066cc;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
 
-<!-- 🔐 Login Section -->
-<div id="loginSection">
-  <h2>Login to ZaraFix</h2>
-  <button class="btn red" onclick="googleLogin()">Login with Google</button>
-  <p id="msg" style="color: red;"></p>
+<h2>🔧 ZaraFix - Poster View</h2>
+
+<div id="cardContainer">
+  <p>Loading posters...</p>
 </div>
 
-<!-- 👋 Welcome Section -->
-<div id="welcomeSection" class="hidden">
-  <h2>Welcome to <b>ZaraFix</b></h2>
-  <div id="userInfo">Checking login...</div>
-
-  <!-- 🔼 2 buttons -->
-  <div class="button-row">
-    <a class="btn green" href="service-request.html">Service Request</a>
-    <a class="btn blue" href="poster-dashboard.html">Provider</a>
-  </div>
-
-  <!-- 🔽 3 buttons -->
-  <div class="button-row">
-    <a class="btn purple" href="admin-dashboard.html">Admin</a>
-    <a class="btn orange" href="#">Real Estate</a>
-    <a class="btn gray" href="#">Ambulance</a>
-  </div>
-
-  <!-- ⬇️ 2 buttons -->
-  <div class="button-row">
-    <a class="btn orange" href="#">Marriage</a>
-    <button class="btn red" onclick="logout()">Logout</button>
-  </div>
-
-  <!-- 🧾 Poster Card -->
-  <div class="card-wrapper" id="posterCards">
-    <h3>🔧 All Posters</h3>
-    <!-- Live poster data will be added here -->
-  </div>
+<div class="navButtons">
+  <button class="btn" onclick="prevCard()">⬅️ Prev</button>
+  <button class="btn" onclick="nextCard()">➡️ Next</button>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
@@ -141,51 +84,45 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById("loginSection").style.display = "none";
-      document.getElementById("welcomeSection").style.display = "block";
-      document.getElementById("userInfo").innerHTML = `
-        👤 <b>${user.displayName || 'User'}</b><br>
-        📧 ${user.email}
-      `;
-      loadPosters();
-    } else {
-      document.getElementById("loginSection").style.display = "block";
-      document.getElementById("welcomeSection").style.display = "none";
+  let posters = [];
+  let currentIndex = 0;
+
+  function displayCard(index) {
+    const card = document.getElementById("cardContainer");
+    if (posters.length === 0) {
+      card.innerHTML = "<p>No posters found.</p>";
+      return;
     }
-  });
-
-  function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .catch(error => {
-        document.getElementById("msg").innerText = error.message;
-      });
+    const p = posters[index];
+    card.innerHTML = `
+      <div class="posterField"><b>Shop:</b> ${p.shop || "N/A"}</div>
+      <div class="posterField"><b>Name:</b> ${p.name || "N/A"}</div>
+      <div class="posterField"><b>Address:</b> ${p.address || "N/A"}</div>
+      <div class="posterField"><b>Category:</b> ${p.category || "N/A"}</div>
+      <div class="posterField"><b>WhatsApp:</b> 
+        <a class="posterLink" href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp || "N/A"}</a>
+      </div>
+    `;
   }
 
-  function logout() {
-    firebase.auth().signOut();
+  function nextCard() {
+    if (posters.length === 0) return;
+    currentIndex = (currentIndex + 1) % posters.length;
+    displayCard(currentIndex);
   }
 
-  function loadPosters() {
-    const container = document.getElementById("posterCards");
-    db.ref("posters").once("value").then(snapshot => {
-      container.innerHTML += "<hr>";
-      snapshot.forEach(child => {
-        const p = child.val();
-        container.innerHTML += `
-          <div class="poster-item">
-            <p><b>Shop:</b> ${p.shop || "N/A"}</p>
-            <p><b>Name:</b> ${p.name || "N/A"}</p>
-            <p><b>Address:</b> ${p.address || "N/A"}</p>
-            <p><b>Category:</b> ${p.category || "N/A"}</p>
-            <p><b>WhatsApp:</b> <a href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp}</a></p>
-          </div>
-        `;
-      });
+  function prevCard() {
+    if (posters.length === 0) return;
+    currentIndex = (currentIndex - 1 + posters.length) % posters.length;
+    displayCard(currentIndex);
+  }
+
+  db.ref("posters").once("value").then(snapshot => {
+    snapshot.forEach(child => {
+      posters.push(child.val());
     });
-  }
+    displayCard(currentIndex);
+  });
 </script>
 
 </body>
