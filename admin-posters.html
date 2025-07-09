@@ -66,7 +66,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Recharge ₹100
+    // Recharge ₹100 to wallet
     function rechargeWallet(uid, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
       walletRef.once("value").then(snap => {
@@ -78,36 +78,38 @@
       });
     }
 
-    // Load Requests
+    // Load all requests (support nested structure)
     db.ref("requests").once("value", snapshot => {
       const requestsDiv = document.getElementById("requests");
-      snapshot.forEach(child => {
-        const req = child.val();
-        const uid = req.userId;
-        const statusId = "wallet-" + uid + "-" + Math.floor(Math.random() * 10000);
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(childSnap => {
+          const req = childSnap.val();
+          const uid = req.userId;
+          const statusId = "wallet-" + uid + "-" + Math.floor(Math.random() * 10000);
 
-        const accepted = req.acceptedBy
-          ? Object.values(req.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
-          : "<i>No one accepted</i>";
+          const accepted = req.acceptedBy
+            ? Object.values(req.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
+            : "<i>No one accepted</i>";
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <b>${req.name}</b> (${req.category})<br>
-          Address: ${req.address}, ${req.city} - ${req.pincode}<br>
-          Issue: ${req.issue}<br>
-          WhatsApp: ${req.whatsapp}<br>
-          <small>UID: ${uid}</small><br>
-          ✅ Accepted By: <ul>${accepted}</ul>
-          <div class="wallet-status" id="${statusId}">Wallet loading...</div>
-          <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
-        `;
-        requestsDiv.appendChild(card);
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <b>${req.name}</b> (${req.category})<br>
+            Address: ${req.address}, ${req.city} - ${req.pincode}<br>
+            Issue: ${req.issue}<br>
+            WhatsApp: ${req.whatsapp}<br>
+            <small>UID: ${uid}</small><br>
+            ✅ Accepted By: <ul>${accepted}</ul>
+            <div class="wallet-status" id="${statusId}">Wallet loading...</div>
+            <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
+          `;
+          requestsDiv.appendChild(card);
 
-        // Load wallet amount
-        db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
-          const val = wSnap.val() || 0;
-          document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
+          // Load current wallet balance
+          db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
+            const val = wSnap.val() || 0;
+            document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
+          });
         });
       });
     });
