@@ -44,7 +44,6 @@
     button:hover, .btn:hover {
       transform: scale(1.03);
     }
-
     .green-btn {
       background: linear-gradient(to right, #00c853, #64dd17);
     }
@@ -52,28 +51,42 @@
       background: linear-gradient(to right, #f39c12, #e67e22);
     }
 
-    #preview, #scanner {
+    #scanner {
+      width: 250px;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    #preview {
       display: block;
       width: 100%;
       border-radius: 12px;
       margin-top: 12px;
     }
 
-    a.download-btn {
+    .download-btn {
       text-decoration: none;
       color: white;
+      font-weight: bold;
+    }
+
+    .note {
+      font-size: 14px;
+      color: #777;
+      margin-top: 8px;
     }
   </style>
 </head>
 <body>
 
-<!-- Recharge Form -->
 <div class="box" id="formBox">
   <h2>🔋 Recharge ₹100</h2>
+
   <img id="scanner" src="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" alt="Scan QR to Pay">
   
-  <!-- 3D Download Button -->
-  <a href="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" download class="btn orange-btn download-btn">📥 Download QR Code</a>
+  <!-- Download Button -->
+  <a class="btn orange-btn download-btn" href="https://i.ibb.co/TWxbkpt/qr-scanner-zarafix.jpg" download="ZaraFix-QR.jpg">📥 Download QR Code</a>
+  <div class="note">📌 Long press on QR to save in gallery (for mobile)</div>
 
   <input type="text" id="name" placeholder="Your Name" required>
   <input type="text" id="whatsapp" placeholder="Your WhatsApp (10 digits)" required>
@@ -82,13 +95,12 @@
   <button id="submitBtn" class="green-btn" onclick="submitRecharge()">📤 Submit Recharge</button>
 </div>
 
-<!-- Waiting Box -->
 <div class="wait-box" id="waitingBox" style="display: none;">
   <h2>⏳ Please wait for recharge approval...</h2>
   <p>Your request has been submitted.<br>Recharge will be added after admin approval.</p>
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -139,7 +151,6 @@
     const apiKey = "72c022c1182b94d6baa3d4fc675dd641";
     const formData = new FormData();
     formData.append("image", file);
-
     const res = await fetch("https://api.imgbb.com/1/upload?key=" + apiKey, {
       method: "POST",
       body: formData
