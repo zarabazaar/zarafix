@@ -13,7 +13,21 @@
       padding: 10px 16px; border: none; border-radius: 10px;
       background: linear-gradient(to right, #00b09b, #96c93d);
       color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      cursor: pointer;
+      cursor: pointer; position: relative;
+    }
+    .led {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
     .section { display: none; }
     .active { display: block; }
@@ -23,6 +37,12 @@
     .card {
       background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       padding: 16px; width: 90%; max-width: 340px;
+      position: relative;
+    }
+    .card .led {
+      position: absolute;
+      top: 8px;
+      left: 8px;
     }
     .btn {
       padding: 10px 14px; margin: 8px 4px 0 0;
@@ -32,7 +52,10 @@
     .delete { background-color: #e74c3c; }
     .view { background-color: #3498db; }
     a.whatsapp { text-decoration: none; color: #2d3436; }
-    .danger { background: crimson; color: white; padding: 10px 16px; border-radius: 10px; margin: 10px auto; display: block; cursor: pointer; font-weight: bold; }
+    .danger {
+      background: crimson; color: white; padding: 10px 16px; border-radius: 10px;
+      margin: 10px auto; display: block; cursor: pointer; font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -40,7 +63,7 @@
 <h1>👑 ZaraFix Admin Dashboard</h1>
 
 <div class="nav">
-  <button onclick="showSection('posterSection')">👷 Posters</button>
+  <button onclick="showSection('posterSection')">👷 Posters <span id="posterLed" class="led" style="display:none;"></span></button>
   <button onclick="showSection('userSection')">🧑‍💻 Users</button>
   <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
 </div>
@@ -71,17 +94,9 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-  authDomain: "zara-fix.firebaseapp.com",
-  databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-  projectId: "zara-fix",
-  storageBucket: "zara-fix.appspot.com",
-  messagingSenderId: "476473209200",
-  appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-};
+// Firebase Init
+const firebaseConfig = { apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E", authDomain: "zara-fix.firebaseapp.com", databaseURL: "https://zara-fix-default-rtdb.firebaseio.com", projectId: "zara-fix", storageBucket: "zara-fix.appspot.com", messagingSenderId: "476473209200", appId: "1:476473209200:web:9f6efe6c32fd4248949fb5" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
@@ -144,7 +159,7 @@ function deleteRequest(userId, requestId) {
 }
 
 function cleanUpEmptyRequests() {
-  if (!confirm("⚠️ Are you sure you want to clean up empty/invalid requests?")) return;
+  if (!confirm("Clean up invalid requests?")) return;
   db.ref("requests").once("value").then(snapshot => {
     snapshot.forEach(userSnap => {
       const userId = userSnap.key;
@@ -157,20 +172,23 @@ function cleanUpEmptyRequests() {
         });
       }
     });
-    alert("🧹 Cleanup done. Refreshing list...");
+    alert("Cleanup done.");
     loadUsers();
   });
 }
 
 function loadPosters() {
   const list = document.getElementById("posterList");
+  let pending = false;
   db.ref("posters").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const p = child.val();
       const uid = child.key;
+      if (!p.approved) pending = true;
       list.innerHTML += `
         <div class="card">
+          ${!p.approved ? '<span class="led"></span>' : ''}
           <strong>${p.name}</strong><br>
           🔑 <code>${uid}</code><br>
           🏪 ${p.shop}<br>
@@ -184,19 +202,20 @@ function loadPosters() {
         </div>
       `;
     });
+    document.getElementById("posterLed").style.display = pending ? "inline-block" : "none";
   });
 }
 
 function approvePoster(uid) {
   db.ref("posters/" + uid).update({ approved: true });
-  alert("✅ Poster approved.");
+  alert("Poster approved.");
   loadPosters();
 }
 
 function deletePoster(uid) {
   if (confirm("Delete this poster?")) {
     db.ref("posters/" + uid).remove();
-    alert("🗑️ Poster deleted.");
+    alert("Poster deleted.");
     loadPosters();
   }
 }
@@ -230,7 +249,7 @@ function approveRecharge(uid) {
     const current = snap.val() || 0;
     walletRef.set(current + 100);
     db.ref("rechargeRequests/" + uid).update({ status: "approved" });
-    alert("✅ Recharge approved. ₹100 added.");
+    alert("Recharge approved.");
     loadRechargeRequests();
   });
 }
