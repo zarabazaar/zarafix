@@ -39,24 +39,29 @@
       if (!user) window.location.href = "login.html";
     });
 
+    const requestsDiv = document.getElementById("requests");
+
     firebase.database().ref("requests").once("value", snapshot => {
-      const requestsDiv = document.getElementById("requests");
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(child => {
-          const r = child.val();
-          const accepted = r.acceptedBy
-            ? Object.values(r.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
-            : "<i>No one accepted</i>";
-          requestsDiv.innerHTML += `
-            <div class="card">
-              <b>${r.name}</b> (${r.category})<br>
-              Address: ${r.address}, ${r.city} - ${r.pincode}<br>
-              Issue: ${r.issue}<br>
-              WhatsApp: ${r.whatsapp}<br>
-              ✅ Accepted By: <ul>${accepted}</ul>
-            </div>
-          `;
-        });
+      if (!snapshot.exists()) {
+        requestsDiv.innerHTML = "<p>No requests found.</p>";
+        return;
+      }
+
+      snapshot.forEach(child => {
+        const r = child.val();
+        const accepted = r.acceptedBy
+          ? Object.values(r.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
+          : "<i>No one accepted</i>";
+
+        requestsDiv.innerHTML += `
+          <div class="card">
+            <b>${r.name}</b> (${r.category})<br>
+            Address: ${r.address}, ${r.city} - ${r.pincode}<br>
+            Issue: ${r.issue}<br>
+            WhatsApp: ${r.whatsapp}<br>
+            <b>Accepted By:</b> <ul>${accepted}</ul>
+          </div>
+        `;
       });
     });
   </script>
