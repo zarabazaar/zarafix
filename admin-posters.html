@@ -15,7 +15,6 @@
       margin: 15px 0;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      position: relative;
       transition: 0.3s ease;
     }
     .card:hover {
@@ -67,14 +66,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Recharge ₹1100
+    // Recharge ₹100
     function rechargeWallet(uid, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
       walletRef.once("value").then(snap => {
         let current = snap.val() || 0;
-        let updated = current + 1100;
+        let updated = current + 100;
         walletRef.set(updated).then(() => {
-          document.getElementById(statusId).innerText = `✅ Wallet: ₹${updated} (Recharged ₹1100)`;
+          document.getElementById(statusId).innerText = `✅ Wallet: ₹${updated} (Recharged ₹100)`;
         });
       });
     }
@@ -101,11 +100,11 @@
           <small>UID: ${uid}</small><br>
           ✅ Accepted By: <ul>${accepted}</ul>
           <div class="wallet-status" id="${statusId}">Wallet loading...</div>
-          <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹1100</button>
+          <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
         `;
         requestsDiv.appendChild(card);
 
-        // Load wallet
+        // Load wallet amount
         db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
           const val = wSnap.val() || 0;
           document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
