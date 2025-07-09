@@ -13,17 +13,22 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .recharge-btn {
-      margin-top: 10px;
+      margin: 8px 4px 4px 0;
       background: #00c853;
       color: white;
       border: none;
-      padding: 10px 15px;
+      padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
     }
     .recharge-btn:hover {
       background: #009624;
+    }
+    .wallet-status {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #333;
     }
   </style>
 </head>
@@ -49,24 +54,28 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function rechargeWallet(uid) {
+    // 🔋 Recharge function
+    function rechargeWallet(uid, amount, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
       walletRef.once("value").then(snap => {
         let current = snap.val() || 0;
-        walletRef.set(current + 100).then(() => {
-          alert("✅ ₹100 added to wallet for UID: " + uid);
+        walletRef.set(current + amount).then(() => {
+          document.getElementById(statusId).innerText = `✅ Wallet Recharged ₹${amount}`;
         });
       });
     }
 
-    // Load all requests
+    // 🔄 Load all requests
     db.ref("requests").once("value", snapshot => {
       const requestsDiv = document.getElementById("requests");
       snapshot.forEach(child => {
         const req = child.val();
+        const uid = req.userId;
         const accepted = req.acceptedBy
           ? Object.values(req.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
           : "<i>No one accepted</i>";
+
+        const statusId = `status-${uid}-${Math.floor(Math.random()*10000)}`;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -75,11 +84,21 @@
           Address: ${req.address}, ${req.city} - ${req.pincode}<br>
           Issue: ${req.issue}<br>
           WhatsApp: ${req.whatsapp}<br>
-          <small>UID: ${req.userId}</small><br>
+          <small>UID: ${uid}</small><br>
           ✅ Accepted By: <ul>${accepted}</ul>
-          <button class="recharge-btn" onclick="rechargeWallet('${req.userId}')">💰 Recharge ₹100</button>
+          <div class="wallet-status" id="${statusId}">Wallet status unknown</div>
+          <button class="recharge-btn" onclick="rechargeWallet('${uid}', 100, '${statusId}')">💰 +₹100</button>
+          <button class="recharge-btn" onclick="rechargeWallet('${uid}', 200, '${statusId}')">💰 +₹200</button>
+          <button class="recharge-btn" onclick="rechargeWallet('${uid}', 500, '${statusId}')">💰 +₹500</button>
         `;
+
         requestsDiv.appendChild(card);
+
+        // 🔍 Load current wallet value
+        db.ref("posters/" + uid + "/wallet").once("value").then(walletSnap => {
+          const val = walletSnap.val() || 0;
+          document.getElementById(statusId).innerText = `💼 Wallet Balance: ₹${val}`;
+        });
       });
     });
   </script>
