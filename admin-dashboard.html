@@ -132,19 +132,19 @@ function loadUsers() {
       const userRequests = userSnap.val();
       if (userRequests && typeof userRequests === 'object') {
         Object.entries(userRequests).forEach(([requestId, req]) => {
-          if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) return;
+          if (!req || !req.whatsapp || !req.address) return;
           const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
           list.innerHTML += `
             <div class="card">
               <strong>${req.name || "Unnamed"}</strong><br>
               🆔 UID: <code>${req.userId || userId}</code><br>
               📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
-              📍 ${req.address}<br>
+              📍 ${req.address || "N/A"}<br>
               🏙️ ${req.city || "N/A"}<br>
               📮 ${req.pincode || "N/A"}<br>
-              🔧 ${req.category}<br>
-              📋 ${req.issue || "No issue provided"}<br>
-              🕒 ${req.timestamp}<br>
+              🔧 ${req.category || "N/A"}<br>
+              📋 ${req.issue || "N/A"}<br>
+              🕒 ${req.timestamp ? new Date(req.timestamp).toLocaleString() : "N/A"}<br>
               👷 Accepted By: ${accepted}<br>
               <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
               <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
@@ -153,6 +153,9 @@ function loadUsers() {
         });
       }
     });
+    if (list.innerHTML === "") {
+      list.innerHTML = "<p style='text-align:center;'>No service requests found.</p>";
+    }
   });
 }
 
@@ -172,7 +175,7 @@ function cleanUpEmptyRequests() {
       const userRequests = userSnap.val();
       if (userRequests && typeof userRequests === 'object') {
         Object.entries(userRequests).forEach(([requestId, req]) => {
-          if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) {
+          if (!req || !req.whatsapp || !req.address) {
             db.ref(`requests/${userId}/${requestId}`).remove();
           }
         });
