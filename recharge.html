@@ -9,13 +9,14 @@
       background: linear-gradient(to right, #e0f7fa, #ffffff);
       padding: 20px;
     }
-    .box {
+    .box, .wait-box {
       max-width: 400px;
       margin: auto;
       background: white;
       padding: 20px;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
     }
     input, button {
       width: 100%;
@@ -33,10 +34,6 @@
       border: none;
       cursor: pointer;
     }
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
     #preview, #scanner {
       display: block;
       width: 100%;
@@ -47,17 +44,21 @@
 </head>
 <body>
 
-<div class="box">
+<!-- Recharge Form -->
+<div class="box" id="formBox">
   <h2>🔋 Recharge ₹100</h2>
-
-  <!-- Admin QR Code -->
   <img id="scanner" src="https://i.ibb.co/5rP2PZR/scanner-qr.png" alt="Scan QR to Pay">
-
   <input type="text" id="name" placeholder="Your Name" required>
   <input type="text" id="whatsapp" placeholder="Your WhatsApp (10 digits)" required>
   <input type="file" id="image" accept="image/*" required>
-  <img id="preview" alt="Screenshot Preview" />
+  <img id="preview" alt="Screenshot Preview" style="display:none" />
   <button id="submitBtn" onclick="submitRecharge()">📤 Submit Recharge</button>
+</div>
+
+<!-- Waiting Message -->
+<div class="wait-box" id="waitingBox" style="display: none;">
+  <h2>⏳ Please wait for recharge approval...</h2>
+  <p>Your request has been submitted.<br>Recharge will be added after admin approval.</p>
 </div>
 
 <!-- Firebase -->
@@ -80,12 +81,21 @@
   const auth = firebase.auth();
 
   let currentUser = null;
-  auth.onAuthStateChanged(user => {
+
+  auth.onAuthStateChanged(async user => {
     if (!user) {
       alert("Please login first.");
       window.location.href = "index.html";
     } else {
       currentUser = user;
+      const userId = user.uid;
+
+      // Check if recharge already submitted
+      const snap = await db.ref("rechargeRequests/" + userId).once("value");
+      if (snap.exists() && snap.val().status === "pending") {
+        document.getElementById("formBox").style.display = "none";
+        document.getElementById("waitingBox").style.display = "block";
+      }
     }
   });
 
@@ -116,14 +126,14 @@
   async function submitRecharge() {
     const btn = document.getElementById("submitBtn");
     btn.disabled = true;
-    btn.innerText = "⏳ Uploading...";
+    btn.innerText = "⏳ Submitting...";
 
     const name = document.getElementById("name").value.trim();
     let whatsapp = document.getElementById("whatsapp").value.trim();
     const imageFile = document.getElementById("image").files[0];
 
     if (!name || !whatsapp || !imageFile) {
-      alert("⚠️ Fill all fields.");
+      alert("⚠️ Please fill all fields.");
       btn.disabled = false;
       btn.innerText = "📤 Submit Recharge";
       return;
@@ -142,7 +152,7 @@
     try {
       const snapshot = await db.ref("rechargeRequests/" + userId).once("value");
       if (snapshot.exists() && snapshot.val().status === "pending") {
-        alert("⏳ You already submitted a pending request.");
+        alert("⏳ Already submitted.");
         btn.disabled = false;
         btn.innerText = "📤 Submit Recharge";
         return;
@@ -160,16 +170,14 @@
         image: imageUrl
       });
 
-      // Send to Admin WhatsApp
-      const msg = `*🔋 Recharge Request*\n👤 Name: ${name}\n📞 WhatsApp: ${whatsapp}\n💰 ₹100\n🆔 UID: ${userId}\n🖼 Screenshot: ${imageUrl}`;
-      const encoded = encodeURIComponent(msg);
-      window.open("https://wa.me/918806940156?text=" + encoded, "_blank");
+      // WhatsApp to Admin
+      const message = `*🔋 Recharge Request*\n👤 Name: ${name}\n📞 WhatsApp: ${whatsapp}\n💰 ₹100\n🆔 UID: ${userId}\n🖼 Screenshot: ${imageUrl}`;
+      window.open("https://wa.me/918806940156?text=" + encodeURIComponent(message), "_blank");
 
-      alert("✅ Recharge request sent.");
-      window.location.href = "posterDashboard.html";
+      document.getElementById("formBox").style.display = "none";
+      document.getElementById("waitingBox").style.display = "block";
 
     } catch (err) {
-      console.error(err);
       alert("❌ Error: " + err.message);
       btn.disabled = false;
       btn.innerText = "📤 Submit Recharge";
