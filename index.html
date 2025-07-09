@@ -120,13 +120,13 @@
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
-      // Logged in
       document.getElementById("logoutBtn").style.display = "inline-block";
       document.getElementById("loginBtn").style.display = "none";
+      loadPosters();
     } else {
-      // Not logged in
       document.getElementById("logoutBtn").style.display = "none";
       document.getElementById("loginBtn").style.display = "inline-block";
+      document.getElementById("posterCard").innerHTML = "<p>Please login to view posters.</p>";
     }
   });
 
@@ -145,20 +145,24 @@
     `;
   }
 
-  db.ref("posters").once("value").then(snapshot => {
-    snapshot.forEach(child => {
-      posters.push(child.val());
-    });
-    if (posters.length) {
-      showPoster(current);
-      setInterval(() => {
-        current = (current + 1) % posters.length;
+  function loadPosters() {
+    posters = [];
+    current = 0;
+    db.ref("posters").once("value").then(snapshot => {
+      snapshot.forEach(child => {
+        posters.push(child.val());
+      });
+      if (posters.length) {
         showPoster(current);
-      }, 4000);
-    } else {
-      document.getElementById("posterCard").innerHTML = "<p>No posters found.</p>";
-    }
-  });
+        setInterval(() => {
+          current = (current + 1) % posters.length;
+          showPoster(current);
+        }, 4000);
+      } else {
+        document.getElementById("posterCard").innerHTML = "<p>No posters found.</p>";
+      }
+    });
+  }
 
   function logout() {
     firebase.auth().signOut().then(() => {
