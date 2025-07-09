@@ -112,24 +112,25 @@ function loadUsers() {
     snapshot.forEach(userSnap => {
       const userId = userSnap.key;
       const userRequests = userSnap.val();
-      Object.entries(userRequests).forEach(([requestId, req]) => {
-        if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) return;
-
-        const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
-        list.innerHTML += `
-          <div class="card">
-            <strong>${req.name || "Unnamed"}</strong><br>
-            📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
-            📍 ${req.address}<br>
-            🔧 ${req.category}<br>
-            📝 ${req.issue || "No issue provided"}<br>
-            🕒 ${new Date(req.timestamp).toLocaleString()}<br>
-            👷 Accepted By: ${accepted}<br>
-            <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
-            <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
-          </div>
-        `;
-      });
+      if (userRequests && typeof userRequests === 'object') {
+        Object.entries(userRequests).forEach(([requestId, req]) => {
+          if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) return;
+          const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
+          list.innerHTML += `
+            <div class="card">
+              <strong>${req.name || "Unnamed"}</strong><br>
+              📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
+              📍 ${req.address}<br>
+              🔧 ${req.category}<br>
+              📋 ${req.issue || "No issue provided"}<br>
+              🕒 ${new Date(req.timestamp).toLocaleString()}<br>
+              👷 Accepted By: ${accepted}<br>
+              <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
+              <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
+            </div>
+          `;
+        });
+      }
     });
   });
 }
@@ -148,11 +149,13 @@ function cleanUpEmptyRequests() {
     snapshot.forEach(userSnap => {
       const userId = userSnap.key;
       const userRequests = userSnap.val();
-      Object.entries(userRequests).forEach(([requestId, req]) => {
-        if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) {
-          db.ref(`requests/${userId}/${requestId}`).remove();
-        }
-      });
+      if (userRequests && typeof userRequests === 'object') {
+        Object.entries(userRequests).forEach(([requestId, req]) => {
+          if (!req || !req.whatsapp || !req.address || !req.timestamp || !req.category) {
+            db.ref(`requests/${userId}/${requestId}`).remove();
+          }
+        });
+      }
     });
     alert("🧹 Cleanup done. Refreshing list...");
     loadUsers();
@@ -169,10 +172,10 @@ function loadPosters() {
       list.innerHTML += `
         <div class="card">
           <strong>${p.name}</strong><br>
-          🆔 <code>${uid}</code><br>
+          🔑 <code>${uid}</code><br>
           🏪 ${p.shop}<br>
           📍 ${p.address}<br>
-          💼 ${p.category}<br>
+          🔧 ${p.category}<br>
           📞 ${p.whatsapp}<br>
           💰 Wallet: ₹${p.wallet || 0}<br>
           ${p.approved ? "✅ Approved" : "<span style='color:red'>⏳ Not Approved</span>"}<br>
