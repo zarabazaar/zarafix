@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Poster Slider</title>
+  <title>ZaraFix - Poster View</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -12,8 +12,8 @@
     }
 
     .btn {
-      padding: 10px 16px;
-      font-size: 14px;
+      padding: 8px 12px;
+      font-size: 13px;
       margin: 6px;
       border: none;
       border-radius: 10px;
@@ -21,6 +21,15 @@
       color: white;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       cursor: pointer;
+      min-width: 90px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     #cardContainer {
@@ -28,12 +37,10 @@
       border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       padding: 20px;
-      margin-top: 20px;
-      max-width: 360px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 20px auto 0;
+      max-width: 340px;
+      min-height: 240px;
       text-align: left;
-      min-height: 250px;
     }
 
     .posterField {
@@ -42,34 +49,43 @@
       color: #333;
     }
 
-    .navButtons {
-      display: flex;
-      justify-content: space-between;
-      max-width: 360px;
-      margin: 20px auto 0;
-    }
-
-    .posterLink {
-      color: #0066cc;
-      text-decoration: none;
+    @media (max-width: 600px) {
+      .btn {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-width: 80px;
+      }
     }
   </style>
 </head>
 <body>
 
-<h2>🔧 ZaraFix - Poster View</h2>
+<h2>👋 Welcome to <b>ZaraFix</b></h2>
 
+<!-- 🔘 Buttons Layout -->
+<div class="button-row">
+  <a class="btn" href="service-request.html">📋 Service Request</a>
+  <a class="btn" href="poster-dashboard.html">🧰 Service Provider</a>
+</div>
+<div class="button-row">
+  <a class="btn" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
+  <a class="btn" href="#">🏠 Real Estate</a>
+  <a class="btn" href="#">💍 Marriage Bureau</a>
+</div>
+<div class="button-row">
+  <a class="btn" href="#">🚑 Ambulance</a>
+  <button class="btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+<!-- 🔄 Poster Card Slider -->
 <div id="cardContainer">
   <p>Loading posters...</p>
 </div>
 
-<div class="navButtons">
-  <button class="btn" onclick="prevCard()">⬅️ Prev</button>
-  <button class="btn" onclick="nextCard()">➡️ Next</button>
-</div>
-
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
   const firebaseConfig = {
@@ -87,7 +103,7 @@
   let posters = [];
   let currentIndex = 0;
 
-  function displayCard(index) {
+  function showCard(index) {
     const card = document.getElementById("cardContainer");
     if (posters.length === 0) {
       card.innerHTML = "<p>No posters found.</p>";
@@ -99,30 +115,28 @@
       <div class="posterField"><b>Name:</b> ${p.name || "N/A"}</div>
       <div class="posterField"><b>Address:</b> ${p.address || "N/A"}</div>
       <div class="posterField"><b>Category:</b> ${p.category || "N/A"}</div>
-      <div class="posterField"><b>WhatsApp:</b> 
-        <a class="posterLink" href="https://wa.me/${p.whatsapp}" target="_blank">${p.whatsapp || "N/A"}</a>
-      </div>
     `;
   }
 
-  function nextCard() {
+  function autoSlide() {
     if (posters.length === 0) return;
     currentIndex = (currentIndex + 1) % posters.length;
-    displayCard(currentIndex);
-  }
-
-  function prevCard() {
-    if (posters.length === 0) return;
-    currentIndex = (currentIndex - 1 + posters.length) % posters.length;
-    displayCard(currentIndex);
+    showCard(currentIndex);
   }
 
   db.ref("posters").once("value").then(snapshot => {
     snapshot.forEach(child => {
       posters.push(child.val());
     });
-    displayCard(currentIndex);
+    showCard(currentIndex);
+    setInterval(autoSlide, 4000); // auto change every 4 seconds
   });
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      location.href = "index.html";
+    });
+  }
 </script>
 
 </body>
