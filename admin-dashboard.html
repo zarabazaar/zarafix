@@ -15,14 +15,6 @@
       color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       cursor: pointer; position: relative;
     }
-    .led {
-      position: absolute;
-      top: 5px; right: 5px;
-      width: 10px; height: 10px;
-      background: red; border-radius: 50%;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     .section { display: none; }
     .active { display: block; }
     .grid {
@@ -33,7 +25,6 @@
       padding: 16px; width: 90%; max-width: 340px;
       position: relative;
     }
-    .card .led { position: absolute; top: 8px; left: 8px; }
     .btn {
       padding: 10px 14px; margin: 8px 4px 0 0;
       border: none; border-radius: 10px; cursor: pointer; color: white;
@@ -41,17 +32,9 @@
     .approve { background-color: #2ecc71; }
     .delete { background-color: #e74c3c; }
     .view { background-color: #3498db; }
-    a.whatsapp { text-decoration: none; color: #2d3436; }
     .danger {
       background: crimson; color: white; padding: 10px 16px; border-radius: 10px;
       margin: 10px auto; display: block; cursor: pointer; font-weight: bold;
-    }
-    input, select, #helperFormSection button {
-      width: 100%; padding: 10px; margin: 6px 0;
-      border-radius: 8px; border: 1px solid #ccc;
-    }
-    #helperFormSection button {
-      background: #27ae60; color: white; font-weight: bold; cursor: pointer;
     }
   </style>
 </head>
@@ -60,54 +43,31 @@
 <h1>👑 ZaraFix Admin Dashboard</h1>
 
 <div class="nav">
-  <button onclick="showSection('posterSection')">👷 Posters <span id="posterLed" class="led" style="display:none;"></span></button>
+  <button onclick="showSection('posterSection')">👷 Posters</button>
   <button onclick="showSection('userSection')">🧑‍💻 Users</button>
-  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests <span id="rechargeLed" class="led" style="display:none;"></span></button>
-  <button onclick="showSection('helperFormSection')">➕ Add Test Request</button>
+  <button onclick="showSection('rechargeRequestSection')">🔋 Recharge Requests</button>
+  <button onclick="location.href='addRequest.html'">📄 Add Sample Request</button>
 </div>
 
 <div style="text-align:center;">
-  <button class="danger" onclick="cleanUpEmptyRequests()">🧹 Cleanup Invalid User Requests</button>
+  <button class="danger" onclick="cleanUpOldRequests()">🧹 Delete Wrong Requests</button>
 </div>
 
-<!-- Posters -->
 <div id="posterSection" class="section">
   <h2>👷 Posters</h2>
   <div id="posterList" class="grid"></div>
 </div>
 
-<!-- Users -->
 <div id="userSection" class="section active">
   <h2>🧑‍💻 Users - Service Requests</h2>
   <div id="userList" class="grid"></div>
 </div>
 
-<!-- Recharge Requests -->
 <div id="rechargeRequestSection" class="section">
   <h2>🔋 Recharge Requests</h2>
   <div id="rechargeList" class="grid"></div>
 </div>
 
-<!-- Helper Form -->
-<div id="helperFormSection" class="section">
-  <h2>🛠 Admin Helper - Add User Request</h2>
-  <select id="userSelect"><option>Loading...</option></select>
-  <input id="name" placeholder="Customer Name">
-  <input id="whatsapp" placeholder="WhatsApp Number">
-  <input id="address" placeholder="Address">
-  <input id="city" placeholder="City">
-  <input id="pincode" placeholder="Pincode">
-  <select id="category">
-    <option>AC Repair</option>
-    <option>Fridge Repair</option>
-    <option>Washing Machine</option>
-    <option>TV Repair</option>
-  </select>
-  <input id="issue" placeholder="Describe the Issue">
-  <button onclick="submitRequest()">➕ Submit Request</button>
-</div>
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -125,21 +85,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-// Section toggle
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'helperFormSection') loadHelperPosters();
 }
 
-// Admin Auth Check
 auth.onAuthStateChanged(user => {
   if (!user) return location.href = "index.html";
   db.ref("users/" + user.uid).once("value").then(snap => {
     if (snap.exists() && snap.val().isAdmin === true) {
-      loadRechargeRequests();
       loadPosters();
       loadUsers();
+      loadRechargeRequests();
     } else {
       alert("Access denied. Admin only.");
       location.href = "index.html";
@@ -147,20 +104,67 @@ auth.onAuthStateChanged(user => {
   });
 });
 
-// Posters Load
+function loadUsers() {
+  const list = document.getElementById("userList");
+  db.ref("requests").once("value").then(snapshot => {
+    list.innerHTML = "";
+    snapshot.forEach(userSnap => {
+      const userId = userSnap.key;
+      const userRequests = userSnap.val();
+      if (typeof userRequests === 'object') {
+        Object.entries(userRequests).forEach(([requestId, req]) => {
+          if (!req || !req.whatsapp || !req.address) return;
+          const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
+          list.innerHTML += `
+            <div class="card">
+              <strong>${req.name || "Unnamed"}</strong><br>
+              🆔 UID: <code>${req.userId || userId}</code><br>
+              📞 <a href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
+              📍 ${req.address || "N/A"}<br>
+              🏩 ${req.city || "N/A"}<br>
+              📬 ${req.pincode || "N/A"}<br>
+              🔧 ${req.category || "N/A"}<br>
+              📋 ${req.issue || "N/A"}<br>
+              🕒 ${req.timestamp || "N/A"}<br>
+              👷 Accepted By: ${accepted}<br>
+              <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete</button>
+            </div>
+          `;
+        });
+      }
+    });
+  });
+}
+
+function deleteRequest(userId, requestId) {
+  if (confirm("Delete this request?")) {
+    db.ref(`requests/${userId}/${requestId}`).remove().then(loadUsers);
+  }
+}
+
+function cleanUpOldRequests() {
+  db.ref("requests").once("value").then(snapshot => {
+    snapshot.forEach(child => {
+      if (child.key.startsWith("-")) {
+        db.ref("requests/" + child.key).remove();
+      }
+    });
+    alert("Deleted old wrong format requests.");
+    loadUsers();
+  });
+}
+
 function loadPosters() {
   const list = document.getElementById("posterList");
-  let pending = false;
   db.ref("posters").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
-      const p = child.val(); const uid = child.key;
-      if (!p.approved) pending = true;
+      const p = child.val();
+      const uid = child.key;
       list.innerHTML += `
         <div class="card">
-          ${!p.approved ? '<span class="led"></span>' : ''}
           <strong>${p.name}</strong><br>
-          🔑 <code>${uid}</code><br>
+          🔑 UID: <code>${uid}</code><br>
           🏪 ${p.shop}<br>
           📍 ${p.address}<br>
           🔧 ${p.category}<br>
@@ -172,155 +176,51 @@ function loadPosters() {
         </div>
       `;
     });
-    document.getElementById("posterLed").style.display = pending ? "inline-block" : "none";
   });
 }
 
-// Approve/Delete Posters
 function approvePoster(uid) {
-  db.ref("posters/" + uid).update({ approved: true });
-  alert("Poster approved."); loadPosters();
+  db.ref("posters/" + uid).update({ approved: true }).then(loadPosters);
 }
+
 function deletePoster(uid) {
   if (confirm("Delete this poster?")) {
-    db.ref("posters/" + uid).remove();
-    alert("Poster deleted."); loadPosters();
+    db.ref("posters/" + uid).remove().then(loadPosters);
   }
 }
 
-// Load User Requests
-function loadUsers() {
-  const list = document.getElementById("userList");
-  db.ref("requests").once("value").then(snapshot => {
-    list.innerHTML = "";
-    snapshot.forEach(userSnap => {
-      const userId = userSnap.key;
-      const userRequests = userSnap.val();
-      if (userRequests && typeof userRequests === 'object') {
-        Object.entries(userRequests).forEach(([requestId, req]) => {
-          if (!req || !req.whatsapp || !req.address) return;
-          const accepted = req.acceptedBy ? Object.keys(req.acceptedBy).join(", ") : "❌ Not accepted yet";
-          list.innerHTML += `
-            <div class="card">
-              <strong>${req.name || "Unnamed"}</strong><br>
-              🆔 UID: <code>${req.userId || userId}</code><br>
-              📞 <a class="whatsapp" href="https://wa.me/${req.whatsapp}" target="_blank">${req.whatsapp}</a><br>
-              📍 ${req.address || "N/A"}<br>
-              🏙️ ${req.city || "N/A"}<br>
-              📮 ${req.pincode || "N/A"}<br>
-              🔧 ${req.category || "N/A"}<br>
-              📋 ${req.issue || "N/A"}<br>
-              🕒 ${req.timestamp ? new Date(req.timestamp).toLocaleString() : "N/A"}<br>
-              👷 Accepted By: ${accepted}<br>
-              <button class="btn view" onclick="alert('Accepted by: ${accepted}')">👀 See Who Accepted</button>
-              <button class="btn delete" onclick="deleteRequest('${userId}', '${requestId}')">🗑️ Delete Request</button>
-            </div>
-          `;
-        });
-      }
-    });
-    if (list.innerHTML === "") {
-      list.innerHTML = "<p style='text-align:center;'>No service requests found.</p>";
-    }
-  });
-}
-function deleteRequest(userId, requestId) {
-  if (confirm("Delete this service request?")) {
-    db.ref("requests/" + userId + "/" + requestId).remove();
-    alert("🗑️ Request deleted."); loadUsers();
-  }
-}
-function cleanUpEmptyRequests() {
-  if (!confirm("Clean up invalid requests?")) return;
-  db.ref("requests").once("value").then(snapshot => {
-    snapshot.forEach(userSnap => {
-      const userId = userSnap.key;
-      const userRequests = userSnap.val();
-      Object.entries(userRequests).forEach(([requestId, req]) => {
-        if (!req || !req.whatsapp || !req.address) {
-          db.ref(`requests/${userId}/${requestId}`).remove();
-        }
-      });
-    });
-    alert("Cleanup done."); loadUsers();
-  });
-}
-
-// Recharge Requests
 function loadRechargeRequests() {
   const list = document.getElementById("rechargeList");
-  let pending = false;
   db.ref("rechargeRequests").once("value").then(snapshot => {
     list.innerHTML = "";
     snapshot.forEach(child => {
       const r = child.val();
       if (r.status === "pending") {
-        pending = true;
         list.innerHTML += `
           <div class="card">
             <strong>${r.name}</strong><br>
             🏧 UID: <code>${r.userId}</code><br>
-            📞 <a class="whatsapp" href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
+            📞 <a href="https://wa.me/${r.whatsapp}" target="_blank">${r.whatsapp}</a><br>
             💰 Amount: ₹${r.amount}<br>
             ⏰ ${new Date(r.timestamp).toLocaleString()}<br>
             <img src="${r.image}" style="width:100%;border-radius:10px;"><br>
-            <button class="btn approve" onclick="approveRecharge('${r.userId}')">✅ Approve Recharge</button>
+            <button class="btn approve" onclick="approveRecharge('${r.userId}')">✅ Approve</button>
           </div>
         `;
       }
     });
-    document.getElementById("rechargeLed").style.display = pending ? "inline-block" : "none";
   });
 }
+
 function approveRecharge(uid) {
   const walletRef = db.ref("posters/" + uid + "/wallet");
   walletRef.once("value").then(snap => {
     const current = snap.val() || 0;
     walletRef.set(current + 100);
     db.ref("rechargeRequests/" + uid).update({ status: "approved" });
-    alert("Recharge approved."); loadRechargeRequests();
-  });
-}
-
-// Helper Admin Request Submission
-function loadHelperPosters() {
-  const userSelect = document.getElementById("userSelect");
-  db.ref("posters").once("value").then(snapshot => {
-    userSelect.innerHTML = "";
-    snapshot.forEach(child => {
-      const p = child.val(); const uid = child.key;
-      userSelect.innerHTML += `<option value="${uid}">${p.name} (${p.shop || "No Shop"})</option>`;
-    });
-  });
-}
-function submitRequest() {
-  const userId = document.getElementById("userSelect").value;
-  const name = document.getElementById("name").value.trim();
-  const whatsapp = document.getElementById("whatsapp").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const city = document.getElementById("city").value.trim();
-  const pincode = document.getElementById("pincode").value.trim();
-  const category = document.getElementById("category").value;
-  const issue = document.getElementById("issue").value.trim();
-
-  if (!userId || !name || !whatsapp || !address || !category) {
-    alert("Please fill all required fields.");
-    return;
-  }
-
-  const requestData = {
-    name, whatsapp, address, city, pincode, category, issue,
-    timestamp: new Date().toLocaleString(),
-    userId
-  };
-
-  const newRef = db.ref("requests/" + userId).push();
-  newRef.set(requestData).then(() => {
-    alert("✅ Request saved!");
-    document.querySelectorAll("#helperFormSection input").forEach(i => i.value = "");
+    loadRechargeRequests();
   });
 }
 </script>
-
 </body>
 </html>
