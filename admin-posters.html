@@ -1,35 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🛠️ ZaraFix Admin - Posters</title>
+  <title>📦 User Requests - ZaraFix</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial; background: #f2f2f2; padding: 20px; }
-    h2 { text-align: center; }
     .card {
-      background: white; padding: 15px; margin: 15px auto;
-      border-radius: 10px; max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    .btn {
-      margin: 5px 5px 0 0; padding: 8px 16px;
-      border: none; border-radius: 6px;
-      color: white; font-size: 14px; cursor: pointer;
+    .recharge-btn {
+      margin-top: 10px;
+      background: #00c853;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
     }
-    .approve { background: #4CAF50; }
-    .reject { background: #f44336; }
-    .delete { background: #9e9e9e; }
-    .recharge { background: #1976D2; }
-    .approved { color: green; font-weight: bold; }
-    .rejected { color: red; font-weight: bold; }
+    .recharge-btn:hover {
+      background: #009624;
+    }
   </style>
 </head>
 <body>
+  <h2>📦 All User Requests</h2>
+  <div id="requests"></div>
 
-  <h2>🛠️ All Posters (Service Providers)</h2>
-  <div id="posters"></div>
-
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -45,91 +47,41 @@
       appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
     };
     firebase.initializeApp(firebaseConfig);
-
-    const adminUID = "YOUR_ADMIN_UID_HERE"; // 👈 change this to your UID
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user || user.uid !== adminUID) {
-        alert("Access denied. Admins only.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      const postersDiv = document.getElementById("posters");
-
-      firebase.database().ref("posters").once("value", snapshot => {
-        snapshot.forEach(child => {
-          const uid = child.key;
-          const data = child.val();
-
-          // Auto-fill missing fields
-          const name = data.name || "No Name";
-          const shop = data.shop || "No Shop";
-          const address = data.address || "No Address";
-          const whatsapp = data.whatsapp || "Not Provided";
-          const category = data.category || "Unknown";
-          const email = data.email || "No Email";
-          const wallet = data.wallet || 0;
-          const approved = data.approved;
-
-          // If any field was missing, update it to Firebase
-          const updatedData = { name, shop, address, whatsapp, category, email, wallet };
-          firebase.database().ref("posters/" + uid).update(updatedData);
-
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-            <b>${name}</b> (${category})<br>
-            🛒 Shop: ${shop}<br>
-            📍 Address: ${address}<br>
-            📱 WhatsApp: ${whatsapp}<br>
-            ✉️ Email: ${email}<br>
-            💰 Wallet: ₹${wallet}<br>
-            Status: <span id="status-${uid}">${approved === true ? "✅ Approved" : (approved === false ? "❌ Rejected" : "⏳ Pending")}</span><br>
-            <button class="btn approve" onclick="approvePoster('${uid}')">✅ Approve</button>
-            <button class="btn reject" onclick="rejectPoster('${uid}')">❌ Reject</button>
-            <button class="btn delete" onclick="deletePoster('${uid}')">🗑 Delete</button>
-            <button class="btn recharge" onclick="rechargeWallet('${uid}')">💰 +₹100</button>
-          `;
-          postersDiv.appendChild(card);
-        });
-      });
-    });
-
-    function approvePoster(uid) {
-      firebase.database().ref("posters/" + uid + "/approved").set(true).then(() => {
-        document.getElementById("status-" + uid).innerText = "✅ Approved";
-        alert("✅ Approved");
-      });
-    }
-
-    function rejectPoster(uid) {
-      firebase.database().ref("posters/" + uid + "/approved").set(false).then(() => {
-        document.getElementById("status-" + uid).innerText = "❌ Rejected";
-        alert("❌ Rejected");
-      });
-    }
-
-    function deletePoster(uid) {
-      if (confirm("Are you sure you want to delete this poster?")) {
-        firebase.database().ref("posters/" + uid).remove().then(() => {
-          alert("🗑 Deleted");
-          location.reload();
-        });
-      }
-    }
+    const db = firebase.database();
 
     function rechargeWallet(uid) {
-      const walletRef = firebase.database().ref("posters/" + uid + "/wallet");
-      walletRef.once("value", snap => {
-        const current = snap.val() || 0;
+      const walletRef = db.ref("posters/" + uid + "/wallet");
+      walletRef.once("value").then(snap => {
+        let current = snap.val() || 0;
         walletRef.set(current + 100).then(() => {
-          alert("💰 Wallet recharged ₹100");
-          location.reload();
+          alert("✅ ₹100 added to wallet for UID: " + uid);
         });
       });
     }
-  </script>
 
+    // Load all requests
+    db.ref("requests").once("value", snapshot => {
+      const requestsDiv = document.getElementById("requests");
+      snapshot.forEach(child => {
+        const req = child.val();
+        const accepted = req.acceptedBy
+          ? Object.values(req.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
+          : "<i>No one accepted</i>";
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <b>${req.name}</b> (${req.category})<br>
+          Address: ${req.address}, ${req.city} - ${req.pincode}<br>
+          Issue: ${req.issue}<br>
+          WhatsApp: ${req.whatsapp}<br>
+          <small>UID: ${req.userId}</small><br>
+          ✅ Accepted By: <ul>${accepted}</ul>
+          <button class="recharge-btn" onclick="rechargeWallet('${req.userId}')">💰 Recharge ₹100</button>
+        `;
+        requestsDiv.appendChild(card);
+      });
+    });
+  </script>
 </body>
 </html>
