@@ -51,7 +51,6 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -66,7 +65,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 🔋 Recharge wallet
     function rechargeWallet(uid, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
       walletRef.once("value").then(snap => {
@@ -78,7 +76,6 @@
       });
     }
 
-    // 🚀 Load all posters
     db.ref("posters").once("value", snapshot => {
       const postersDiv = document.getElementById("posters");
 
@@ -99,7 +96,7 @@
         `;
         postersDiv.appendChild(card);
 
-        // Load current wallet
+        // Load wallet value
         db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
           const val = wSnap.val() || 0;
           document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
