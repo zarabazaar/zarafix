@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>📦 User Requests - ZaraFix</title>
+  <title>🛠️ ZaraFix Admin - Posters</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -45,13 +45,13 @@
   </style>
 </head>
 <body>
-  <h2>📦 All User Requests</h2>
-  <div id="requests"></div>
+  <h2>🛠️ All Posters (Service Providers)</h2>
+  <div id="posters"></div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -66,56 +66,46 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // 🔋 Recharge wallet
     function rechargeWallet(uid, statusId) {
       const walletRef = db.ref("posters/" + uid + "/wallet");
-      walletRef.once("value").then(snapshot => {
-        const current = snapshot.val() || 0;
-        const newAmount = current + 100;
-        walletRef.set(newAmount).then(() => {
-          document.getElementById(statusId).innerText = `✅ Wallet: ₹${newAmount} (Recharged ₹100)`;
+      walletRef.once("value").then(snap => {
+        let current = snap.val() || 0;
+        let updated = current + 100;
+        walletRef.set(updated).then(() => {
+          document.getElementById(statusId).innerText = `✅ Wallet: ₹${updated}`;
         });
       });
     }
 
-    function loadRequests() {
-      const container = document.getElementById("requests");
-      db.ref("requests").once("value", snapshot => {
-        snapshot.forEach(userSnap => {
-          userSnap.forEach(reqSnap => {
-            const req = reqSnap.val();
-            const uid = req.userId || userSnap.key;
-            const statusId = "wallet-" + uid + "-" + Math.floor(Math.random() * 10000);
+    // 🚀 Load all posters
+    db.ref("posters").once("value", snapshot => {
+      const postersDiv = document.getElementById("posters");
 
-            const accepted = req.acceptedBy
-              ? Object.values(req.acceptedBy).map(p => `<li>${p.name || 'Poster'}</li>`).join("")
-              : "<i>No one accepted</i>";
+      snapshot.forEach(child => {
+        const poster = child.val();
+        const uid = child.key;
+        const statusId = "wallet-" + uid;
 
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `
-              <b>${req.name}</b> (${req.category})<br>
-              Address: ${req.address}, ${req.city} - ${req.pincode}<br>
-              Issue: ${req.issue}<br>
-              WhatsApp: ${req.whatsapp}<br>
-              <small>UID: ${uid}</small><br>
-              ✅ Accepted By: <ul>${accepted}</ul>
-              <div class="wallet-status" id="${statusId}">💼 Wallet: loading...</div>
-              <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
-            `;
-            container.appendChild(card);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <b>${poster.name || "No Name"}</b> (${poster.category || "N/A"})<br>
+          📞 WhatsApp: ${poster.whatsapp || "Not provided"}<br>
+          🏠 Address: ${poster.address || "N/A"}<br>
+          <small>UID: ${uid}</small><br>
+          <div class="wallet-status" id="${statusId}">Loading wallet...</div>
+          <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
+        `;
+        postersDiv.appendChild(card);
 
-            // Load wallet
-            db.ref("posters/" + uid + "/wallet").once("value").then(w => {
-              const wallet = w.val() || 0;
-              document.getElementById(statusId).innerText = `💼 Wallet: ₹${wallet}`;
-            });
-          });
+        // Load current wallet
+        db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
+          const val = wSnap.val() || 0;
+          document.getElementById(statusId).innerText = `💼 Wallet: ₹${val}`;
         });
       });
-    }
-
-    // Run on load
-    window.onload = loadRequests;
+    });
   </script>
 </body>
 </html>
