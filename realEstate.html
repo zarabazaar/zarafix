@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🏠 ZaraFix Real Estate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: Arial; background: #f2f2f2; margin: 0; padding: 20px; }
+    .btn { background: #6200ea; color: white; padding: 15px; border: none; border-radius: 12px; margin: 10px; font-size: 18px; box-shadow: 3px 3px 10px gray; cursor: pointer; }
+    .section { display: none; margin-top: 20px; }
+    form { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; max-width: 500px; margin: auto; }
+    input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 0 15px #ccc; margin: 20px; padding: 20px; transition: 0.3s ease; }
+    .card:hover { transform: scale(1.05); }
+    .whatsapp-btn { background: green; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-block; }
+    #loginSection { text-align: center; }
+  </style>
+</head>
+<body>
+  <h2 align="center">🏠 ZaraFix Real Estate</h2>
+
+  <div id="loginSection">
+    <p id="userEmail"></p>
+    <button class="btn" onclick="loginWithGoogle()">🔐 Login with Google</button>
+    <button class="btn" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <div style="text-align:center" id="mainButtons" style="display:none">
+    <button class="btn" onclick="showSection('viewSection')">👀 View Rooms</button>
+    <button class="btn" onclick="showSection('searchSection')">🔍 Search</button>
+    <button class="btn" onclick="showSection('postSection')">📤 Post Property</button>
+    <button class="btn" onclick="contactAdmin()">📞 Contact Admin</button>
+    <button class="btn" onclick="showSection('adminSection')">🛠️ Admin Dashboard</button>
+  </div>
+
+  <div id="viewSection" class="section">
+    <select id="viewType" onchange="loadRooms()">
+      <option value="rent">Rent Room</option>
+      <option value="sell">Sell Room</option>
+    </select>
+    <div id="roomList"></div>
+  </div>
+
+  <div id="searchSection" class="section">
+    <form onsubmit="searchRooms(event)">
+      <input type="text" id="searchLocation" placeholder="Location">
+      <input type="text" id="searchBHK" placeholder="BHK">
+      <button class="btn" type="submit">Search</button>
+    </form>
+    <div id="searchResults"></div>
+  </div>
+
+  <div id="postSection" class="section">
+    <form id="postForm" onsubmit="submitProperty(event)">
+      <input type="text" id="owner" placeholder="Your Name" required>
+      <input type="text" id="contact" placeholder="Contact Number" required>
+      <select id="type">
+        <option value="rent">Rent</option>
+        <option value="sell">Sell</option>
+      </select>
+      <input type="text" id="location" placeholder="Location" required>
+      <input type="text" id="bhk" placeholder="BHK (e.g., 1RK, 2BHK)" required>
+      <input type="text" id="area" placeholder="Area (in sq ft)" required>
+      <input type="number" id="deposit" placeholder="Deposit (Rent only)">
+      <input type="number" id="price" placeholder="Rent or Selling Price" required>
+      <textarea id="desc" placeholder="Description"></textarea>
+      <input type="file" id="img" accept="image/*" required>
+      <button class="btn" type="submit">Post Property</button>
+    </form>
+  </div>
+
+  <div id="adminSection" class="section">
+    <h3>📋 All Posted Properties</h3>
+    <div id="adminList"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://zarafix-default-rtdb.firebaseio.com/",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(res => {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainButtons').style.display = 'block';
+        document.getElementById('userEmail').innerText = `Logged in as: ${res.user.email}`;
+      });
+    }
+
+    function logout() {
+      auth.signOut().then(() => location.reload());
+    }
+
+    function submitProperty(e) {
+      e.preventDefault();
+      const reader = new FileReader();
+      const file = document.getElementById("img").files[0];
+      reader.onloadend = function () {
+        const data = {
+          owner: owner.value,
+          contact: contact.value,
+          type: type.value,
+          location: location.value,
+          bhk: bhk.value,
+          area: area.value,
+          deposit: deposit.value,
+          price: price.value,
+          desc: desc.value,
+          img: reader.result,
+          user: auth.currentUser.email,
+          timestamp: Date.now()
+        };
+        db.ref('properties').push(data, () => alert("✅ Property posted successfully"));
+        document.getElementById("postForm").reset();
+      }
+      if (file) reader.readAsDataURL(file);
+    }
+
+    function loadRooms() {
+      const type = document.getElementById("viewType").value;
+      db.ref("properties").once("value", snap => {
+        const data = snap.val();
+        const list = document.getElementById("roomList");
+        list.innerHTML = "";
+        for (let id in data) {
+          const d = data[id];
+          if (d.type === type) list.innerHTML += roomCard(d);
+        }
+      });
+    }
+
+    function searchRooms(e) {
+      e.preventDefault();
+      const loc = searchLocation.value.toLowerCase();
+      const bhk = searchBHK.value.toLowerCase();
+      db.ref("properties").once("value", snap => {
+        const data = snap.val();
+        const list = document.getElementById("searchResults");
+        list.innerHTML = "";
+        for (let id in data) {
+          const d = data[id];
+          if (d.location.toLowerCase().includes(loc) && d.bhk.toLowerCase().includes(bhk)) {
+            list.innerHTML += roomCard(d);
+          }
+        }
+      });
+    }
+
+    function roomCard(d) {
+      return `<div class='card'>
+        <img src='${d.img}' style='width:100%; border-radius:10px;'>
+        <h3>${d.bhk} in ${d.location}</h3>
+        <p>Type: ${d.type.toUpperCase()}</p>
+        <p>Area: ${d.area} sq ft</p>
+        <p>Price: ₹${d.price}</p>
+        ${d.type === 'rent' ? `<p>Deposit: ₹${d.deposit}</p>` : ''}
+        <p>Owner: ${d.owner}</p>
+        <p>Contact: ${d.contact}</p>
+        <p>${d.desc}</p>
+        <a class="whatsapp-btn" target="_blank" href="https://wa.me/918806940156?text=👋 New interest in ${d.bhk} at ${d.location}.\nCustomer: ${auth.currentUser.email}\nOwner: ${d.owner}\nContact: ${d.contact}\nPrice: ₹${d.price}">Chat with Admin</a>
+      </div>`;
+    }
+
+    function contactAdmin() {
+      const msg = encodeURIComponent("Hi Admin, I want to discuss about a property listed on ZaraFix.");
+      window.open("https://wa.me/918806940156?text=" + msg, '_blank');
+    }
+
+    function loadAdminList() {
+      db.ref("properties").once("value", snap => {
+        const data = snap.val();
+        const list = document.getElementById("adminList");
+        list.innerHTML = "";
+        for (let id in data) {
+          const d = data[id];
+          list.innerHTML += roomCard(d);
+        }
+      });
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainButtons').style.display = 'block';
+        document.getElementById('userEmail').innerText = `Logged in as: ${user.email}`;
+        loadAdminList();
+      }
+    });
+  </script>
+</body>
+</html>
