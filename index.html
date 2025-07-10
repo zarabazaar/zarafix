@@ -1,155 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZaraFix - Poster View</title>
+  <title>🔐 ZaraFix - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #e3f2fd, #ffffff);
-      margin: 0;
-      padding: 20px 10px;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
       text-align: center;
+      padding-top: 100px;
     }
-
-    h2 {
-      font-size: 22px;
-      margin-bottom: 20px;
-    }
-
-    .button-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-      margin-bottom: 30px;
-      padding: 0 10px;
-    }
-
-    .btn {
-      padding: 12px;
-      border: none;
-      border-radius: 14px;
+    .login-btn {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
       color: white;
-      font-size: 14px;
-      font-weight: bold;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 30px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
       transition: transform 0.2s ease;
     }
-
-    .btn:hover {
+    .login-btn:hover {
       transform: scale(1.05);
-    }
-
-    .green { background: linear-gradient(to right, #4CAF50, #2E7D32); }
-    .blue { background: linear-gradient(to right, #2196F3, #0D47A1); }
-    .red { background: linear-gradient(to right, #f44336, #b71c1c); }
-    .purple { background: linear-gradient(to right, #9c27b0, #6a1b9a); }
-    .orange { background: linear-gradient(to right, #ff9800, #e65100); }
-    .teal { background: linear-gradient(to right, #009688, #004d40); }
-    .gray { background: linear-gradient(to right, #616161, #212121); }
-
-    #posterCard {
-      max-width: 360px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 18px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-      text-align: left;
-    }
-
-    .field {
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-
-    @media (max-width: 500px) {
-      .btn {
-        font-size: 13px;
-        padding: 10px;
-      }
     }
   </style>
 </head>
 <body>
 
-<h2>👋 Welcome to <b>ZaraFix</b></h2>
+  <h1>🛠️ Welcome to ZaraFix</h1>
+  <p>Please login to continue</p>
+  <button class="login-btn" onclick="googleLogin()">🔐 Login with Google</button>
 
-<div class="button-grid">
-  <a class="btn green" href="service-request.html">📋 Service Request</a>
-  <a class="btn blue" href="poster-dashboard.html">🧰 Service Provider</a>
-  <a class="btn red" href="admin-dashboard.html">🛠️ Admin Dashboard</a>
-  <a class="btn purple" href="#">🏠 Real Estate</a>
-  <a class="btn orange" href="#">💍 Marriage Bureau</a>
-  <a class="btn teal" href="#">🚑 Ambulance</a>
-</div>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-<!-- 🔄 Poster Info Slider -->
-<div id="posterCard">
-  <p>Loading posters...</p>
-</div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
+      authDomain: "zara-fix.firebaseapp.com",
+      projectId: "zara-fix",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCH17_8W_UPmPt4KqpCaV7BpN6KsA4a67E",
-    authDomain: "zara-fix.firebaseapp.com",
-    databaseURL: "https://zara-fix-default-rtdb.firebaseio.com",
-    projectId: "zara-fix",
-    storageBucket: "zara-fix.appspot.com",
-    messagingSenderId: "476473209200",
-    appId: "1:476473209200:web:9f6efe6c32fd4248949fb5"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
-
-  let posters = [];
-  let current = 0;
-
-  function showPoster(i) {
-    const container = document.getElementById("posterCard");
-    if (!posters.length) {
-      container.innerHTML = "<p>No poster data found.</p>";
-      return;
+    function googleLogin() {
+      firebase.auth().signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
+          alert("Welcome " + user.displayName);
+          // ✅ Redirect after login
+          window.location.href = "welcome.html"; // ← Change if needed
+        })
+        .catch(error => {
+          console.error(error);
+          alert("Login failed: " + error.message);
+        });
     }
-    const p = posters[i];
-    container.innerHTML = `
-      <div class="field"><b>Shop:</b> ${p.shop || "N/A"}</div>
-      <div class="field"><b>Name:</b> ${p.name || "N/A"}</div>
-      <div class="field"><b>Address:</b> ${p.address || "N/A"}</div>
-    `;
-  }
-
-  db.ref("posters").once("value").then(snapshot => {
-    snapshot.forEach(child => {
-      posters.push(child.val());
-    });
-    if (posters.length) {
-      showPoster(current);
-      setInterval(() => {
-        current = (current + 1) % posters.length;
-        showPoster(current);
-      }, 4000);
-    } else {
-      document.getElementById("posterCard").innerHTML = "<p>No posters found.</p>";
-    }
-  });
-
-  // ✅ Working Logout Function
-  function logout() {
-    auth.signOut().then(() => {
-      window.location.href = "index.html";
-    }).catch(err => {
-      alert("Logout failed: " + err.message);
-    });
-  }
-</script>
+  </script>
 
 </body>
 </html>
