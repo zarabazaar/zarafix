@@ -25,19 +25,20 @@
       background: linear-gradient(to right, #43cea2, #185a9d);
       color: white;
       border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 16px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
       transition: transform 0.2s ease;
+      display: inline-block;
     }
     .recharge-btn:hover {
       transform: translateY(-2px);
     }
     .wallet-status {
-      margin-top: 10px;
+      margin-top: 8px;
       font-size: 14px;
       color: #333;
     }
@@ -70,7 +71,7 @@
         const current = snap.val() || 0;
         const updated = current + 100;
         walletRef.set(updated).then(() => {
-          document.getElementById(statusId).innerText = `✅ Wallet: ₹${updated}`;
+          document.getElementById(statusId).innerText = `💼 Wallet: ₹${updated}`;
         });
       });
     }
@@ -90,16 +91,18 @@
 
         const card = document.createElement("div");
         card.className = "card";
+
         card.innerHTML = `
-          <b>${data.name || "No Name"}</b> (${data.category || "N/A"})<br>
-          📞 ${data.whatsapp || "Not Provided"}<br>
-          🏠 ${data.address || "No Address"}<br>
-          <div class="wallet-status" id="${statusId}">💼 Loading...</div>
+          <b>👤 ${data.name || "No Name"}</b><br>
+          🔧 Category: ${data.category || "N/A"}<br>
+          📞 WhatsApp: ${data.whatsapp || "Not Provided"}<br>
+          🏠 Address: ${data.address || "No Address"}<br>
+          <div class="wallet-status" id="${statusId}">💼 Wallet: Loading...</div>
           <button class="recharge-btn" onclick="rechargeWallet('${uid}', '${statusId}')">💰 Recharge ₹100</button>
         `;
         postersDiv.appendChild(card);
 
-        // load wallet
+        // Load current wallet
         db.ref("posters/" + uid + "/wallet").once("value").then(wSnap => {
           const wallet = wSnap.val() || 0;
           document.getElementById(statusId).innerText = `💼 Wallet: ₹${wallet}`;
